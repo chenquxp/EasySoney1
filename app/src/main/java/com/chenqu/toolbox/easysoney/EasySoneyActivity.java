@@ -14,7 +14,7 @@ import java.util.*;
 import java.io.*;
 import java.net.*;
 import java.text.*;
-//
+
 public class EasySoneyActivity extends AppCompatActivity implements View.OnClickListener {
     private Button mBGetCurrentData;
     private Button mBSave;
