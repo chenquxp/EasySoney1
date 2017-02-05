@@ -440,7 +440,7 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
                 showIntentActivityNotify("Lucky time.", "Margin=" + margin.toString().substring(0, 5) + "% @" + mETCurrentTime.getText().toString(), "Margin=" + margin.toString().substring(0, 5) + "% @" + mETCurrentTime.getText().toString());
             }
 
-            SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+            SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Beijing"));
             String retStrFormatNowDate = sdFormatter.format(cal.getTime());
