@@ -37,17 +37,16 @@ public class ShowRecentDataActivity extends Activity {
      * @see #onPostCreate
      */
     private EditText et_data;
-  private String sdata="";
+    private String sdata = "";
 
 
-
-   @Override
-   protected void onCreate(Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
-    setContentView(R.layout.show_recent_data_layout);
-      et_data = (EditText) findViewById(R.id.et_recent_data);
-       Bundle bundle=this.getIntent().getExtras();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.show_recent_data_layout);
+        et_data = (EditText) findViewById(R.id.et_recent_data);
+        Bundle bundle = this.getIntent().getExtras();
         et_data.setText(bundle.getString("text"));
 
-  }
+    }
 }

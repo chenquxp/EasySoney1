@@ -14,7 +14,7 @@ import java.util.*;
 import java.io.*;
 import java.net.*;
 import java.text.*;
-//
+
 public class EasySoneyActivity extends AppCompatActivity implements View.OnClickListener {
     private Button mBGetCurrentData;
     private Button mBSave;
@@ -92,11 +92,15 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.show_records_item:
                 Toast.makeText(this, "you clicked show records", Toast.LENGTH_SHORT).show();
-                bundle.putString("text", ReadFile("records.txt") );
+                bundle.putString("text", ReadFile("records.txt"));
                 //把附加的数据放到意图当中
                 intent.putExtras(bundle);
                 //执行意图
                 startActivity(intent);
+                break;
+            case R.id.exit_item:
+                Toast.makeText(this, "you clicked exit", Toast.LENGTH_SHORT).show();
+                finish();
                 break;
             default:
         }
@@ -401,15 +405,15 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Beijing"));
             String retStrFormatNowDate = sdFormatter.format(cal.getTime());
             String srecord = "";
-            srecord +=  retStrFormatNowDate + ",";
-            srecord +=  mETCurrentPrice.getText().toString() + ",";
-            srecord +=  mETCurrentTime.getText().toString() + ",";
-            srecord +=  mETLastdayNet.getText().toString() + ",";
-            srecord +=  mETLastNetDate.getText().toString() + ",";
+            srecord += retStrFormatNowDate + ",";
+            srecord += mETCurrentPrice.getText().toString() + ",";
+            srecord += mETCurrentTime.getText().toString() + ",";
+            srecord += mETLastdayNet.getText().toString() + ",";
+            srecord += mETLastNetDate.getText().toString() + ",";
             srecord += mETLastTargetPrice.getText().toString() + ",";
-            srecord +=  mETTargetCurrentTime.getText().toString() + ",";
+            srecord += mETTargetCurrentTime.getText().toString() + ",";
             srecord += mETTargetCurrentPrice.getText().toString() + ",";
-            srecord +=  mETMargin.getText().toString() + "\n";
+            srecord += mETMargin.getText().toString() + "\n";
             WriteFile("records.txt", srecord);
         } catch (Exception e) {
             e.printStackTrace();
