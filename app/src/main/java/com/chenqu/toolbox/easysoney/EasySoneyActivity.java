@@ -183,11 +183,10 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         timer.cancel();
         super.onDestroy();
     }
+
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event)
-    {
-        if (keyCode == KeyEvent.KEYCODE_BACK )
-        {
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
             // 创建退出对话框
             AlertDialog isExit = new AlertDialog.Builder(this).create();
             // 设置对话框标题
@@ -205,13 +204,13 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         return false;
 
     }
-    /**监听对话框里面的button点击事件*/
-    DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener()
-    {
-        public void onClick(DialogInterface dialog, int which)
-        {
-            switch (which)
-            {
+
+    /**
+     * 监听对话框里面的button点击事件
+     */
+    DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which) {
                 case AlertDialog.BUTTON_POSITIVE:// "确认"按钮退出程序
                     finish();
                     break;
@@ -436,7 +435,7 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
             margin *= 100;
             mETMargin.setText(margin.toString().substring(0, 5) + "%");
             if (margin > 0.1) {
-                //// TODO: 2017/1/30
+
                 showIntentActivityNotify("Lucky time.", "Margin=" + margin.toString().substring(0, 5) + "% @" + mETCurrentTime.getText().toString(), "Margin=" + margin.toString().substring(0, 5) + "% @" + mETCurrentTime.getText().toString());
             }
 
@@ -550,11 +549,8 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
                     MODE_APPEND);
             // 步骤3：将获取过来的值放入文件
             fos.write(msg.getBytes());
-
-            File file = getFilesDir();
             // 步骤4：关闭数据流
             fos.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }

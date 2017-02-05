@@ -3,7 +3,6 @@ package com.chenqu.toolbox.easysoney;
 import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.EditText;
 
 /**
@@ -37,7 +36,6 @@ public class ShowRecentDataActivity extends Activity {
      * @see #onPostCreate
      */
     private EditText et_data;
-    private String sdata = "";
 
 
     @Override
