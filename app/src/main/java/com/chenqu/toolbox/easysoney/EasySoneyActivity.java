@@ -84,11 +84,13 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                     //把附加的数据放到意图当中
                     intent.putExtras(bundle);
                     //执行意图
+                    startActivity(intent);
                 } catch (Exception e) {
-
+                    e.printStackTrace();
+                    OutputMessage(e.toString());
                 }
 
-                startActivity(intent);
+
                 break;
             case R.id.show_records_item:
                 Toast.makeText(this, "you clicked show records", Toast.LENGTH_SHORT).show();
@@ -223,7 +225,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         }
     };
 
-    Handler handler = new Handler() {
+    Handler networkhandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
@@ -270,36 +272,45 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
             String[] netsdata = netval.split(",");
             String[] tarsdata = tarval.split(",");
             // UI界面的更新等相关操作
-            mETCurrentPrice.setText(exsdata[7]);
-            mETCurrentTime.setText(exsdata[30] + " " + exsdata[31]);
-            mETLastdayNet.setText(netsdata[1]);
-            mETLastNetDate.setText(netsdata[4]);
-            mETLastTargetPrice.setText(tarsdata[3]);
-            mETTargetCurrentTime.setText(tarsdata[17] + " " + tarsdata[18].substring(0, 5));
-            mETTargetCurrentPrice.setText(tarsdata[6]);
+            try {
+                mETCurrentPrice.setText(exsdata[7]);
+                mETCurrentTime.setText(exsdata[30] + " " + exsdata[31]);
+                mETLastdayNet.setText(netsdata[1]);
+                mETLastNetDate.setText(netsdata[4]);
+                mETLastTargetPrice.setText(tarsdata[3]);
+                mETTargetCurrentTime.setText(tarsdata[17] + " " + tarsdata[18].substring(0, 5));
+                mETTargetCurrentPrice.setText(tarsdata[6]);
 
-            SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
-            String value = read.getString("target" + mETLastNetDate.getText().toString(), "");
-            if (value.compareTo("") == 0) {
-                mETLastTargetPrice.setTextColor(Color.BLUE);
-                Toast.makeText(getApplicationContext(), mETLastNetDate.getText().toString() + "Last Target Not Save err：" + value + "!=" + mETLastdayNet.getText(), Toast.LENGTH_LONG).show();
-            } else if (value.compareTo(mETLastTargetPrice.getText().toString()) != 0) {
-                Toast.makeText(getApplicationContext(), mETLastNetDate.getText().toString() + "Data err：" + value + "!=" + mETLastTargetPrice.getText(), Toast.LENGTH_LONG).show();
-                mETLastTargetPrice.setText(value);
-                mETLastTargetPrice.setTextColor(Color.RED);
-            } else {
-                mETLastTargetPrice.setTextColor(Color.BLACK);
+                SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
+                String value = read.getString("target" + mETLastNetDate.getText().toString(), "");
+                if (value.compareTo("") == 0) {
+                    mETLastTargetPrice.setTextColor(Color.BLUE);
+                    OutputMessage(mETLastNetDate.getText().toString() + "Last Target Not Save err：" + value + "!=" + mETLastdayNet.getText());
+                } else if (value.compareTo(mETLastTargetPrice.getText().toString()) != 0) {
+                    OutputMessage(mETLastNetDate.getText().toString() + "Data err：" + value + "!=" + mETLastTargetPrice.getText());
+                    mETLastTargetPrice.setText(value);
+                    mETLastTargetPrice.setTextColor(Color.RED);
+                } else {
+                    OutputMessage("New data updated");
+                    mETLastTargetPrice.setTextColor(Color.BLACK);
+                }
+                value = read.getString("net" + mETLastNetDate.getText().toString(), "");
+                if (value.compareTo(mETLastdayNet.getText().toString()) != 0) {
+                    OutputMessage(mETLastNetDate.getText().toString() + "Last Net Not Save err：" + value + "!=" + mETLastdayNet.getText());
+                    mETLastdayNet.setTextColor(Color.BLUE);
+                } else {
+                    mETLastdayNet.setTextColor(Color.BLACK);
+                }
+                CalcMargin();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            value = read.getString("net" + mETLastNetDate.getText().toString(), "");
-            if (value.compareTo(mETLastdayNet.getText().toString()) != 0) {
-                Toast.makeText(getApplicationContext(), mETLastNetDate.getText().toString() + "Last Net Not Save err：" + value + "!=" + mETLastdayNet.getText(), Toast.LENGTH_LONG).show();
-                mETLastdayNet.setTextColor(Color.BLUE);
-            } else {
-                mETLastdayNet.setTextColor(Color.BLACK);
-            }
-            CalcMargin();
         }
     };
+
+    public void OutputMessage(String s) {
+        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+    }
 
     Handler timerhandler = new Handler() {
         @Override
@@ -322,11 +333,17 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
         public void run() {
             Message msg = new Message();
             Bundle bdata = new Bundle();
-            bdata.putString("exvalue", GetHttpText(exurl));
-            bdata.putString("netvalue", GetHttpText(neturl));
-            bdata.putString("tarvalue", GetHttpText(tarurl));
-            msg.setData(bdata);
-            handler.sendMessage(msg);
+            try {
+                bdata.putString("exvalue", GetHttpText(exurl));
+                bdata.putString("netvalue", GetHttpText(neturl));
+                bdata.putString("tarvalue", GetHttpText(tarurl));
+                msg.setData(bdata);
+                networkhandler.sendMessage(msg);
+            } catch (Exception e) {
+                e.printStackTrace();
+
+            }
+
 
         }
 
@@ -348,21 +365,21 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
             case R.id.bt_savenet:
                 editor.putString("net" + date, net);
                 editor.commit();
-                Toast.makeText(getApplicationContext(), "save complete net" + date + " " + net, Toast.LENGTH_LONG).show();
+                OutputMessage("save complete net" + date + " " + net);
                 break;
             case R.id.bt_loadnet:
                 value = read.getString("net" + date, "");
-                Toast.makeText(getApplicationContext(), "saved data：" + value, Toast.LENGTH_LONG).show();
+                OutputMessage("saved data：" + value);
                 mETLastdayNet.setText(value);
                 break;
             case R.id.bt_save_target:
                 editor.putString("target" + date, target);
                 editor.commit();
-                Toast.makeText(getApplicationContext(), "save complete target" + date + " " + target, Toast.LENGTH_LONG).show();
+                OutputMessage("save complete target" + date + " " + target);
                 break;
             case R.id.bt_load_target:
                 value = read.getString("target" + date, "");
-                Toast.makeText(getApplicationContext(), "saved data：" + value, Toast.LENGTH_LONG).show();
+                OutputMessage("saved data：" + value);
                 mETLastTargetPrice.setText(value);
                 break;
             case R.id.bt_calc_margin:
