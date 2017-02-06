@@ -58,7 +58,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         Bundle bundle = new Bundle();
         switch (item.getItemId()) {
             case R.id.show_recent_data_item:
-                Toast.makeText(this, "show data clicked", Toast.LENGTH_SHORT).show();
                 //携带数据
                 String starget = "";
                 String snet = "";
@@ -93,15 +92,13 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
                 break;
             case R.id.show_records_item:
-                Toast.makeText(this, "you clicked show records", Toast.LENGTH_SHORT).show();
-                bundle.putString("text", ReadFile("records.txt"));
+                 bundle.putString("text", ReadFile("records.txt"));
                 //把附加的数据放到意图当中
                 intent.putExtras(bundle);
                 //执行意图
                 startActivity(intent);
                 break;
             case R.id.exit_item:
-                Toast.makeText(this, "you clicked exit", Toast.LENGTH_SHORT).show();
                 timer.cancel();
                 finish();
                 break;
@@ -260,7 +257,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 31：”15:05:32″，时间；
 var hq_str_f_159920="恒生ETF(QDII),1.2784,1.2784,1.2609,2017-01-26,13.5156";
 var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,23307.05,23360.78,-13.39,-0.06,,,29584699,0,0.000,0.00,24364.00,18278.80,2017/01/27,12:09";
-
 02 当日开盘
 03 上日收盘
 04 当日最高
