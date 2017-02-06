@@ -169,9 +169,9 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         editor.commit();*/
 
         mBGetCurrentData.setFocusable(true);
-       // mBGetCurrentData.setFocusableInTouchMode(true);
+        mBGetCurrentData.setFocusableInTouchMode(true);
         mBGetCurrentData.requestFocus();
-       // mBGetCurrentData.requestFocusFromTouch();
+        mBGetCurrentData.requestFocusFromTouch();
 
         initService();
         initNotify();
