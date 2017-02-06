@@ -160,18 +160,18 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         mETTargetCurrentPrice = (EditText) findViewById(R.id.et_target_current_price);
         mETMargin = (EditText) findViewById(R.id.et_margin);
         SharedPreferences.Editor editor = getSharedPreferences("pxmlfile", MODE_WORLD_WRITEABLE).edit();
-        editor.putString("net2017-01-25", "1.2609");
+      /*  editor.putString("net2017-01-25", "1.2609");
         editor.putString("net2017-01-26", "1.2784");
         editor.putString("net2017-02-03", "1.2641");
         editor.putString("target2017-01-25", "23049.12");
         editor.putString("target2017-01-26", "23374.17");
         editor.putString("target2017-02-03", "23129.21");
-        editor.commit();
+        editor.commit();*/
 
         mBGetCurrentData.setFocusable(true);
-        mBGetCurrentData.setFocusableInTouchMode(true);
+       // mBGetCurrentData.setFocusableInTouchMode(true);
         mBGetCurrentData.requestFocus();
-        mBGetCurrentData.requestFocusFromTouch();
+       // mBGetCurrentData.requestFocusFromTouch();
 
         initService();
         initNotify();
