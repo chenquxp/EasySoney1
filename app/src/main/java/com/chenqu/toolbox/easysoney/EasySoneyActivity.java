@@ -14,6 +14,7 @@ import java.util.*;
 import java.io.*;
 import java.text.*;
 
+
 public class EasySoneyActivity extends AppCompatActivity implements View.OnClickListener {
     private Intent mIntentService;
 
@@ -34,6 +35,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     private EditText mETMargin;
     private ToggleButton mTBAuto;
     private TextView mTVIntivalSeconds;
+    private TextView mTVCount;
     private SeekBar mSBIntivalSeconds;
 
     private Integer intivalseconds = 60;
@@ -86,6 +88,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                         snet += "net" + t + ":" + read.getString("net" + t, "") + "\n";
                     }
                     bundle.putString("text", starget + "\n" + snet);
+                    bundle.putBoolean("isdelete",false );
                     //把附加的数据放到意图当中
                     intent.putExtras(bundle);
                     //执行意图
@@ -94,11 +97,12 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                     e.printStackTrace();
                     OutputMessage(e.toString());
                 }
-
-
                 break;
             case R.id.show_records_item:
                 bundle.putString("text", ReadFile("records.txt"));
+                bundle.putBoolean("isdelete",true );
+                bundle.putString("filename","records.txt");
+
                 //把附加的数据放到意图当中
                 intent.putExtras(bundle);
                 //执行意图
@@ -125,7 +129,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            intivalseconds = 60 + 20 * progress;
+            intivalseconds = 30+ 30 * progress;
             mTVIntivalSeconds.setText("AutoGet Intival:" + intivalseconds.toString() + "Seconds");
 
         }
@@ -152,6 +156,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         mTBAuto.setOnClickListener(this);
 
         mTVIntivalSeconds = (TextView) findViewById(R.id.tv_intival_seconds);
+        mTVCount = (TextView) findViewById(R.id.tv_count);
         mSBIntivalSeconds = (SeekBar) findViewById(R.id.sb_intival_seconds);
         mTVIntivalSeconds.setText("AutoGet Intival:" + intivalseconds.toString() + "Seconds");
         mSBIntivalSeconds.setOnSeekBarChangeListener(seekListener);
@@ -304,18 +309,28 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             case R.id.tb_auto:
                 if (mTBAuto.isChecked()) {
                     mSBIntivalSeconds.setEnabled(false);
-                    if (isBind == true) {
+                    if (isBind) {
                         unbindService(sconn);
                     }
                     mIntentService = new Intent(this, PriceMonitorService.class);
                     mIntentService.putExtra("intival", intivalseconds);
                     mIntentService.putExtra("once", false);
+                    mIntentService.putExtra("stop", false);
+
                     bindService(mIntentService, sconn, Context.BIND_AUTO_CREATE);
                     isBind = true;
                 } else {
                     mSBIntivalSeconds.setEnabled(true);
-                    unbindService(sconn);
-                    isBind = false;
+                    if (isBind) {
+                        unbindService(sconn);
+                    }
+                    mIntentService = new Intent(this, PriceMonitorService.class);
+                    mIntentService.putExtra("intival", intivalseconds);
+                    mIntentService.putExtra("once", false);
+                    mIntentService.putExtra("stop", true);
+
+                    bindService(mIntentService, sconn, Context.BIND_AUTO_CREATE);
+                    isBind = true;
                 }
                 break;
         }
@@ -469,6 +484,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 String exval = data.getString("exvalue");
                 String netval = data.getString("netvalue");
                 String tarval = data.getString("tarvalue");
+                Integer count=data.getInt("timercount");
 /*0：”大秦铁路”，股票名字；
 1：”27.55″，今日开盘价；
 2：”27.25″，昨日收盘价；
@@ -507,6 +523,7 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
                 String[] tarsdata = tarval.split(",");
                 // UI界面的更新等相关操作
                 try {
+                    mTVCount.setText(count.toString());
                     mETCurrentPrice.setText(exsdata[7]);
                     mETCurrentTime.setText(exsdata[30] + " " + exsdata[31]);
                     mETLastdayNet.setText(netsdata[1]);

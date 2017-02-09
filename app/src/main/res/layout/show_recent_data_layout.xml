@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
     <EditText
@@ -24,6 +25,18 @@
         android:scrollbarStyle="insideOverlay"
         android:freezesText="false"
         android:gravity="top"
-        android:scrollbars="vertical" />
+        android:scrollbars="vertical"
+        android:scrollbarSize="20dp" />
+
+    <Button
+        android:text="Clear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignLeft="@+id/et_recent_data"
+        android:layout_alignStart="@+id/et_recent_data"
+        android:layout_marginLeft="12dp"
+        android:layout_marginStart="12dp"
+        android:id="@+id/button_delete" />
 
 </RelativeLayout>
