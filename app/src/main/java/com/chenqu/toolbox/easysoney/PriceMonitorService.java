@@ -53,8 +53,7 @@ public class PriceMonitorService  extends Service {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-
-
+            new Thread(networkTask).start();
         }
     };
     Runnable networkTask = new Runnable() {
@@ -66,9 +65,6 @@ public class PriceMonitorService  extends Service {
             intent.putExtra("tarvalue", GetHttpText(tarurl));
             intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
             sendBroadcast(intent);
-
-
-
         }
 
     };

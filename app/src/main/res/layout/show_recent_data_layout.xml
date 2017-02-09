@@ -23,6 +23,7 @@
         android:scrollbarAlwaysDrawVerticalTrack="true"
         android:scrollbarStyle="insideOverlay"
         android:freezesText="false"
-        android:gravity="top" />
+        android:gravity="top"
+        android:scrollbars="vertical" />
 
 </RelativeLayout>

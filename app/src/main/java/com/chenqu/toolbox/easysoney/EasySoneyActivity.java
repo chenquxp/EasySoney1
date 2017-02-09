@@ -12,7 +12,6 @@ import android.graphics.*;
 
 import java.util.*;
 import java.io.*;
-import java.net.*;
 import java.text.*;
 
 public class EasySoneyActivity extends AppCompatActivity implements View.OnClickListener {
@@ -42,11 +41,14 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     private int notifyId = 100;
     private NotificationCompat.Builder mBuilder;
     private NotificationManager mNotificationManager;
-    ServiceConnection sconn = new ServiceConnection(){
+    ServiceConnection sconn = new ServiceConnection() {
         public void onServiceDisconnected(ComponentName name) {
         }
+
         public void onServiceConnected(ComponentName name, IBinder service) {
-        }};
+
+        }
+    };
 
 
     @Override
@@ -96,7 +98,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
                 break;
             case R.id.show_records_item:
-                 bundle.putString("text", ReadFile("records.txt"));
+                bundle.putString("text", ReadFile("records.txt"));
                 //把附加的数据放到意图当中
                 intent.putExtras(bundle);
                 //执行意图
@@ -183,7 +185,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     protected void onDestroy() {
-     //   timer.cancel();
+        //   timer.cancel();
         super.onDestroy();
     }
 
@@ -254,7 +256,8 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         }
     };
 
-boolean isBind=false;
+    boolean isBind = false;
+
     @Override
     public void onClick(View v) {
         String date = mETLastNetDate.getText().toString().trim();
@@ -266,12 +269,14 @@ boolean isBind=false;
         switch (v.getId()) {
             case R.id.bt_getcurrdata:
                 ClearData();
-                if(isBind==true) {unbindService(sconn);}
-               mIntentService = new Intent(EasySoneyActivity.this, PriceMonitorService.class);
-                mIntentService.putExtra("intival",intivalseconds);
-               mIntentService.putExtra("once",true);
-                boolean b= getApplicationContext().bindService(mIntentService,sconn,Context.BIND_AUTO_CREATE);
-                isBind=true;
+                if (isBind) {
+                    unbindService(sconn);
+                }
+                mIntentService = new Intent(EasySoneyActivity.this, PriceMonitorService.class);
+                mIntentService.putExtra("intival", intivalseconds);
+                mIntentService.putExtra("once", true);
+                boolean b = bindService(mIntentService, sconn, Context.BIND_AUTO_CREATE);
+                isBind = true;
                 break;
             case R.id.bt_savenet:
                 editor.putString("net" + date, net);
@@ -299,16 +304,18 @@ boolean isBind=false;
             case R.id.tb_auto:
                 if (mTBAuto.isChecked()) {
                     mSBIntivalSeconds.setEnabled(false);
-                    if(isBind==true) {unbindService(sconn);}
+                    if (isBind == true) {
+                        unbindService(sconn);
+                    }
                     mIntentService = new Intent(this, PriceMonitorService.class);
-                    mIntentService.putExtra("intival",intivalseconds);
-                    mIntentService.putExtra("once",false);
-                    bindService(mIntentService,sconn,Context.BIND_AUTO_CREATE);
-                    isBind=true;
+                    mIntentService.putExtra("intival", intivalseconds);
+                    mIntentService.putExtra("once", false);
+                    bindService(mIntentService, sconn, Context.BIND_AUTO_CREATE);
+                    isBind = true;
                 } else {
                     mSBIntivalSeconds.setEnabled(true);
                     unbindService(sconn);
-                    isBind=false;
+                    isBind = false;
                 }
                 break;
         }
@@ -363,7 +370,7 @@ boolean isBind=false;
 
             SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Beijing"));
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
             String retStrFormatNowDate = sdFormatter.format(cal.getTime());
             String srecord = "";
             srecord += retStrFormatNowDate + ",";
@@ -380,7 +387,6 @@ boolean isBind=false;
             e.printStackTrace();
         }
     }
-
 
 
     public PendingIntent getDefalutIntent(int flags) {
