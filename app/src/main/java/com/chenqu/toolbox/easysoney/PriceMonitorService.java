@@ -49,46 +49,30 @@ public class PriceMonitorService  extends Service {
     private String neturl = "http://hq.sinajs.cn/list=f_159920";
     private String tarurl = "http://hq.sinajs.cn/list=hkHSI";
     Handler timerhandler = new Handler() {
-        String GetHttpText(String url) {
-            byte[] b = new byte[256];
-            InputStream in = null;
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            try {
-                URL u = new URL(url);
-                try {
-                    in = u.openStream();
-                    int i;
-                    while ((i = in.read(b)) != -1) {
-                        bo.write(b, 0, i);
-                    }
 
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    if (in != null) {
-                        in.close();
-                    }
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return bo.toString();
-
-        }
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
 
+
+        }
+    };
+    Runnable networkTask = new Runnable() {
+        @Override
+        public void run() {
             Intent intent = new Intent();
             intent.putExtra("exvalue", GetHttpText(exurl));
             intent.putExtra("netvalue", GetHttpText(neturl));
             intent.putExtra("tarvalue", GetHttpText(tarurl));
             intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
             sendBroadcast(intent);
+
+
+
         }
+
     };
+
     @Override
     public void onCreate() {
 
@@ -137,4 +121,32 @@ e.printStackTrace();
     }
 
 
+    String GetHttpText(String url) {
+        byte[] b = new byte[512];
+        InputStream in = null;
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+        try {
+            URL u = new URL(url);
+            try {
+                in = u.openStream();
+                int i;
+                while ((i = in.read(b)) != -1) {
+                    bo.write(b, 0, i);
+                }
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (in != null) {
+                    in.close();
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bo.toString();
+
+    }
 }
