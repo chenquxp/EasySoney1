@@ -16,6 +16,8 @@ import java.net.*;
 import java.text.*;
 
 public class EasySoneyActivity extends AppCompatActivity implements View.OnClickListener {
+    private Intent mIntentService;
+
     private Button mBGetCurrentData;
     private Button mBSave;
     private Button mBLoad;
@@ -35,15 +37,17 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     private TextView mTVIntivalSeconds;
     private SeekBar mSBIntivalSeconds;
 
-    private Timer timer;
     private Integer intivalseconds = 60;
-    private String exurl = "http://hq.sinajs.cn/list=sz159920";
-    private String neturl = "http://hq.sinajs.cn/list=f_159920";
-    private String tarurl = "http://hq.sinajs.cn/list=hkHSI";
 
     private int notifyId = 100;
     private NotificationCompat.Builder mBuilder;
     private NotificationManager mNotificationManager;
+    ServiceConnection sconn = new ServiceConnection(){
+        public void onServiceDisconnected(ComponentName name) {
+        }
+        public void onServiceConnected(ComponentName name, IBinder service) {
+        }};
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -99,7 +103,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 startActivity(intent);
                 break;
             case R.id.exit_item:
-                timer.cancel();
                 finish();
                 break;
             default:
@@ -173,13 +176,14 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         mBGetCurrentData.requestFocus();
         mBGetCurrentData.requestFocusFromTouch();
 
-        initService();
+        initNotifyService();
         initNotify();
+        registerReceiver();
     }
 
     @Override
     protected void onDestroy() {
-        timer.cancel();
+     //   timer.cancel();
         super.onDestroy();
     }
 
@@ -226,81 +230,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            Bundle data = msg.getData();
-            String exval = data.getString("exvalue");
-            String netval = data.getString("netvalue");
-            String tarval = data.getString("tarvalue");
-/*0：”大秦铁路”，股票名字；
-1：”27.55″，今日开盘价；
-2：”27.25″，昨日收盘价；
-3：”26.91″，当前价格；
-4：”27.55″，今日最高价；
-5：”26.20″，今日最低价；
-6：”26.91″，竞买价，即“买一”报价；
-7：”26.92″，竞卖价，即“卖一”报价；
-8：”22114263″，成交的股票数，由于股票交易以一百股为基本单位，所以在使用时，通常把该值除以一百；
-9：”589824680″，成交金额，单位为“元”，为了一目了然，通常以“万元”为成交金额的单位，所以通常把该值除以一万；
-10：”4695″，“买一”申请4695股，即47手；
-11：”26.91″，“买一”报价；
-12：”57590″，“买二”
-13：”26.90″，“买二”
-14：”14700″，“买三”
-15：”26.89″，“买三”
-16：”14300″，“买四”
-17：”26.88″，“买四”
-18：”15100″，“买五”
-19：”26.87″，“买五”
-20：”3100″，“卖一”申报3100股，即31手；
-21：”26.92″，“卖一”报价
-(22, 23), (24, 25), (26,27), (28, 29)分别为“卖二”至“卖四的情况”
-30：”2008-01-11″，日期；
-31：”15:05:32″，时间；
-var hq_str_f_159920="恒生ETF(QDII),1.2784,1.2784,1.2609,2017-01-26,13.5156";
-var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,23307.05,23360.78,-13.39,-0.06,,,29584699,0,0.000,0.00,24364.00,18278.80,2017/01/27,12:09";
-02 当日开盘
-03 上日收盘
-04 当日最高
-05 当日最低
-06 当前价
 
-*/
-            String[] exsdata = exval.split(",");
-            String[] netsdata = netval.split(",");
-            String[] tarsdata = tarval.split(",");
-            // UI界面的更新等相关操作
-            try {
-                mETCurrentPrice.setText(exsdata[7]);
-                mETCurrentTime.setText(exsdata[30] + " " + exsdata[31]);
-                mETLastdayNet.setText(netsdata[1]);
-                mETLastNetDate.setText(netsdata[4]);
-                mETLastTargetPrice.setText(tarsdata[3]);
-                mETTargetCurrentTime.setText(tarsdata[17] + " " + tarsdata[18].substring(0, 5));
-                mETTargetCurrentPrice.setText(tarsdata[6]);
-
-                SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
-                String value = read.getString("target" + mETLastNetDate.getText().toString(), "");
-                if (value.compareTo("") == 0) {
-                    mETLastTargetPrice.setTextColor(Color.BLUE);
-                    OutputMessage(mETLastNetDate.getText().toString() + "Last Target Not Save err：" + value + "!=" + mETLastdayNet.getText());
-                } else if (value.compareTo(mETLastTargetPrice.getText().toString()) != 0) {
-                    OutputMessage(mETLastNetDate.getText().toString() + "Data err：" + value + "!=" + mETLastTargetPrice.getText());
-                    mETLastTargetPrice.setText(value);
-                    mETLastTargetPrice.setTextColor(Color.RED);
-                } else {
-                    OutputMessage("New data updated");
-                    mETLastTargetPrice.setTextColor(Color.BLACK);
-                }
-                value = read.getString("net" + mETLastNetDate.getText().toString(), "");
-                if (value.compareTo(mETLastdayNet.getText().toString()) != 0) {
-                    OutputMessage(mETLastNetDate.getText().toString() + "Last Net Not Save err：" + value + "!=" + mETLastdayNet.getText());
-                    mETLastdayNet.setTextColor(Color.BLUE);
-                } else {
-                    mETLastdayNet.setTextColor(Color.BLACK);
-                }
-                CalcMargin();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
     };
 
@@ -324,27 +254,7 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
         }
     };
 
-    Runnable networkTask = new Runnable() {
-        @Override
-        public void run() {
-            Message msg = new Message();
-            Bundle bdata = new Bundle();
-            try {
-                bdata.putString("exvalue", GetHttpText(exurl));
-                bdata.putString("netvalue", GetHttpText(neturl));
-                bdata.putString("tarvalue", GetHttpText(tarurl));
-                msg.setData(bdata);
-                networkhandler.sendMessage(msg);
-            } catch (Exception e) {
-                e.printStackTrace();
-
-            }
-
-
-        }
-
-    };
-
+boolean isBind=false;
     @Override
     public void onClick(View v) {
         String date = mETLastNetDate.getText().toString().trim();
@@ -356,7 +266,12 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
         switch (v.getId()) {
             case R.id.bt_getcurrdata:
                 ClearData();
-                new Thread(networkTask).start();
+                if(isBind==true) {unbindService(sconn);}
+               mIntentService = new Intent(EasySoneyActivity.this, PriceMonitorService.class);
+                mIntentService.putExtra("intival",intivalseconds);
+               mIntentService.putExtra("once",true);
+                boolean b= getApplicationContext().bindService(mIntentService,sconn,Context.BIND_AUTO_CREATE);
+                isBind=true;
                 break;
             case R.id.bt_savenet:
                 editor.putString("net" + date, net);
@@ -384,22 +299,16 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
             case R.id.tb_auto:
                 if (mTBAuto.isChecked()) {
                     mSBIntivalSeconds.setEnabled(false);
-                    timer = new Timer();
-                    try {
-                        timer.schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                Message msg = new Message();
-                                msg.what = 0;
-                                timerhandler.sendMessage(msg);
-                            }
-                        }, 1000, intivalseconds * 1000);
-                    } catch (Exception e) {
-                        System.out.println(e.toString());
-                    }
+                    if(isBind==true) {unbindService(sconn);}
+                    mIntentService = new Intent(this, PriceMonitorService.class);
+                    mIntentService.putExtra("intival",intivalseconds);
+                    mIntentService.putExtra("once",false);
+                    bindService(mIntentService,sconn,Context.BIND_AUTO_CREATE);
+                    isBind=true;
                 } else {
                     mSBIntivalSeconds.setEnabled(true);
-                    timer.cancel();
+                    unbindService(sconn);
+                    isBind=false;
                 }
                 break;
         }
@@ -472,34 +381,7 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
         }
     }
 
-    String GetHttpText(String url) {
-        byte[] b = new byte[256];
-        InputStream in = null;
-        ByteArrayOutputStream bo = new ByteArrayOutputStream();
-        try {
-            URL u = new URL(url);
-            try {
-                in = u.openStream();
-                int i;
-                while ((i = in.read(b)) != -1) {
-                    bo.write(b, 0, i);
-                }
 
-
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            } finally {
-                if (in != null) {
-                    in.close();
-                }
-            }
-
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        return bo.toString();
-
-    }
 
     public PendingIntent getDefalutIntent(int flags) {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, new Intent(), flags);
@@ -507,7 +389,7 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
     }
 
 
-    private void initService() {
+    private void initNotifyService() {
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
     }
 
@@ -568,6 +450,91 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
             e.printStackTrace();
         }
 
+    }
+
+    private void registerReceiver() {
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
+        EasySoneyActivity.this.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle data = intent.getExtras();
+                String exval = data.getString("exvalue");
+                String netval = data.getString("netvalue");
+                String tarval = data.getString("tarvalue");
+/*0：”大秦铁路”，股票名字；
+1：”27.55″，今日开盘价；
+2：”27.25″，昨日收盘价；
+3：”26.91″，当前价格；
+4：”27.55″，今日最高价；
+5：”26.20″，今日最低价；
+6：”26.91″，竞买价，即“买一”报价；
+7：”26.92″，竞卖价，即“卖一”报价；
+8：”22114263″，成交的股票数，由于股票交易以一百股为基本单位，所以在使用时，通常把该值除以一百；
+9：”589824680″，成交金额，单位为“元”，为了一目了然，通常以“万元”为成交金额的单位，所以通常把该值除以一万；
+10：”4695″，“买一”申请4695股，即47手；
+11：”26.91″，“买一”报价；
+12：”57590″，“买二”
+13：”26.90″，“买二”
+14：”14700″，“买三”
+15：”26.89″，“买三”
+16：”14300″，“买四”
+17：”26.88″，“买四”
+18：”15100″，“买五”
+19：”26.87″，“买五”
+20：”3100″，“卖一”申报3100股，即31手；
+21：”26.92″，“卖一”报价
+(22, 23), (24, 25), (26,27), (28, 29)分别为“卖二”至“卖四的情况”
+30：”2008-01-11″，日期；
+31：”15:05:32″，时间；
+var hq_str_f_159920="恒生ETF(QDII),1.2784,1.2784,1.2609,2017-01-26,13.5156";
+var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,23307.05,23360.78,-13.39,-0.06,,,29584699,0,0.000,0.00,24364.00,18278.80,2017/01/27,12:09";
+02 当日开盘
+03 上日收盘
+04 当日最高
+05 当日最低
+06 当前价
+*/
+                String[] exsdata = exval.split(",");
+                String[] netsdata = netval.split(",");
+                String[] tarsdata = tarval.split(",");
+                // UI界面的更新等相关操作
+                try {
+                    mETCurrentPrice.setText(exsdata[7]);
+                    mETCurrentTime.setText(exsdata[30] + " " + exsdata[31]);
+                    mETLastdayNet.setText(netsdata[1]);
+                    mETLastNetDate.setText(netsdata[4]);
+                    mETLastTargetPrice.setText(tarsdata[3]);
+                    mETTargetCurrentTime.setText(tarsdata[17] + " " + tarsdata[18].substring(0, 5));
+                    mETTargetCurrentPrice.setText(tarsdata[6]);
+
+                    SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
+                    String value = read.getString("target" + mETLastNetDate.getText().toString(), "");
+                    if (value.compareTo("") == 0) {
+                        mETLastTargetPrice.setTextColor(Color.BLUE);
+                        OutputMessage(mETLastNetDate.getText().toString() + "Last Target Not Save err：" + value + "!=" + mETLastdayNet.getText());
+                    } else if (value.compareTo(mETLastTargetPrice.getText().toString()) != 0) {
+                        OutputMessage(mETLastNetDate.getText().toString() + "Data err：" + value + "!=" + mETLastTargetPrice.getText());
+                        mETLastTargetPrice.setText(value);
+                        mETLastTargetPrice.setTextColor(Color.RED);
+                    } else {
+                        OutputMessage("New data updated");
+                        mETLastTargetPrice.setTextColor(Color.BLACK);
+                    }
+                    value = read.getString("net" + mETLastNetDate.getText().toString(), "");
+                    if (value.compareTo(mETLastdayNet.getText().toString()) != 0) {
+                        OutputMessage(mETLastNetDate.getText().toString() + "Last Net Not Save err：" + value + "!=" + mETLastdayNet.getText());
+                        mETLastdayNet.setTextColor(Color.BLUE);
+                    } else {
+                        mETLastdayNet.setTextColor(Color.BLACK);
+                    }
+                    CalcMargin();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, intentFilter);
     }
 
 }
