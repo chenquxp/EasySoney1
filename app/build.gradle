@@ -15,9 +15,8 @@ android {
         applicationId "com.chenqu.toolbox.easysoney"
         minSdkVersion 16
         targetSdkVersion 24
-        versionName '2.0.1'
+        versionName '2.1.0'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        versionNameSuffix 'Hotfix'
     }
     buildTypes {
         release {
