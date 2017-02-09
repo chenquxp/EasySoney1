@@ -41,7 +41,6 @@ public class PriceMonitorService extends Service {
     private static Timer timer;
     private int intival;
     private boolean once;
-    private boolean isServiceRunning=false;
     private String exurl = "http://hq.sinajs.cn/list=sz159920";
     private String neturl = "http://hq.sinajs.cn/list=f_159920";
     private String tarurl = "http://hq.sinajs.cn/list=hkHSI";
