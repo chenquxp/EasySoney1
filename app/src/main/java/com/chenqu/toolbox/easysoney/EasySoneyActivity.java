@@ -44,6 +44,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     private Integer intivalseconds = 60;
     private boolean isBind = false;
     private PriceMonitorService mPriceService;
+    private ESData mESdata;
 
     private int notifyId = 100;
     private NotificationCompat.Builder mBuilder;
@@ -345,47 +346,50 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     }
 
 
-    public String CalcMargin(String slastnet,String slasttarget,String scurrtarget,String scurrprice,String scurrenttime) {
+    public String CalcMargin(String slastnet, String slasttarget, String scurrtarget, String scurrprice, String scurrenttime) {
         Double lasttarget;
         Double lastnet;
         Double currtarget;
         Double currprice;
         Double margin;
-        String smargin="";
+        String smargin = "";
         try {
             lastnet = Double.parseDouble(slastnet);
-             lasttarget = Double.parseDouble(slasttarget);
+            lasttarget = Double.parseDouble(slasttarget);
             currtarget = Double.parseDouble(scurrtarget);
             currprice = Double.parseDouble(scurrprice);
 
-            margin = (currtarget / lasttarget - currprice / lastnet - 0.0053)*100;
-            smargin=(margin.toString().substring(0, 5) + "%");
+            margin = (currtarget / lasttarget - currprice / lastnet - 0.0053) * 100;
+            smargin = (margin.toString().substring(0, 5) + "%");
             if (margin > 0.1) {
 
                 showIntentActivityNotify("Lucky time.", "Margin=" + margin.toString().substring(0, 5) + "% @" + scurrenttime, "Margin=" + margin.toString().substring(0, 5) + "% @" + scurrenttime);
             }
 
-            SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
-            String retStrFormatNowDate = sdFormatter.format(cal.getTime());
-            String srecord = "";
-            srecord += retStrFormatNowDate + ",";
-            srecord += mETCurrentPrice.getText().toString() + ",";
-            srecord += mETCurrentTime.getText().toString() + ",";
-            srecord += mETLastdayNet.getText().toString() + ",";
-            srecord += mETLastNetDate.getText().toString() + ",";
-            srecord += mETLastTargetPrice.getText().toString() + ",";
-            srecord += mETTargetCurrentTime.getText().toString() + ",";
-            srecord += mETTargetCurrentPrice.getText().toString() + ",";
-            srecord += mETMargin.getText().toString() + "\n";
-            WriteFile("records.txt", srecord);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return smargin;
     }
 
+    public void LogESData(ESData d) {
+        SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
+        String retStrFormatNowDate = sdFormatter.format(cal.getTime());
+        String srecord = "";
+        srecord += d.msCount + ",";
+        srecord += retStrFormatNowDate + ",";
+        srecord += d.msCurrentPrice + ",";
+        srecord += d.msCurrentTime + ",";
+        srecord += d.msLastdayNet + ",";
+        srecord += d.msLastNetDate + ",";
+        srecord += d.msLastTargetPrice + ",";
+        srecord += d.msTargetCurrentTime + ",";
+        srecord += d.msTargetCurrentPrice + ",";
+        srecord += d.msMargin + "\n";
+        WriteFile("records.txt", srecord);
+    }
 
     public PendingIntent getDefalutIntent(int flags) {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, new Intent(), flags);
@@ -453,11 +457,62 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
-    public void FillUI(String exval, String netval, String tarval, Integer count) {
-    /*0：”大秦铁路”，股票名字；
+    public void UpdateUI(ESData d) {
+
+        // UI界面的更新等相关操作
+        try {
+            mTVCount.setText(d.msCount);
+            mETCurrentPrice.setText(d.msCurrentPrice);
+            mETCurrentTime.setText(d.msCurrentTime);
+            mETLastdayNet.setText(d.msLastdayNet);
+            mETLastNetDate.setText(d.msLastNetDate);
+            mETLastTargetPrice.setText(d.msLastTargetPrice);
+            mETTargetCurrentTime.setText(d.msTargetCurrentTime);
+            mETTargetCurrentPrice.setText(d.msTargetCurrentPrice);
+            mETMargin.setText(d.msMargin);
+            mETLastTargetPrice.setTextColor(d.miLastTargetPriceTextColor);
+            mETLastdayNet.setTextColor(d.miLastdayNetTextColor);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void registerReceiver() {
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
+        EasySoneyActivity.this.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle data = intent.getExtras();
+                String exval = data.getString("exvalue");
+                String netval = data.getString("netvalue");
+                String tarval = data.getString("tarvalue");
+                Integer count = data.getInt("timercount");
+                ESData esdata = new ESData(exval, netval, tarval, count);
+                LogESData(esdata);
+                UpdateUI(esdata);
+            }
+        }, intentFilter);
+    }
+
+    class ESData {
+        public String msCount;
+        public String msCurrentPrice;
+        public String msCurrentTime;
+        public String msLastdayNet;
+        public String msLastNetDate;
+        public String msLastTargetPrice;
+        public String msTargetCurrentTime;
+        public String msTargetCurrentPrice;
+        public String msMargin;
+        public int miLastTargetPriceTextColor;
+        public int miLastdayNetTextColor;
+
+        ESData(String exval, String netval, String tarval, Integer count) {
+            /*0：”大秦铁路”，股票名字；
 1：”27.55″，今日开盘价；
 2：”27.25″，昨日收盘价；
 3：”26.91″，当前价格；
@@ -490,66 +545,48 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
 05 当日最低
 06 当前价
 */
-        String[] exsdata = exval.split(",");
-        String[] netsdata = netval.split(",");
-        String[] tarsdata = tarval.split(",");
-        // UI界面的更新等相关操作
-       try {
-            mTVCount.setText(count.toString());
-              mETCurrentPrice.setText(exsdata[7]);
-            mETCurrentTime.setText(exsdata[30] + " " + exsdata[31]);
-            mETLastdayNet.setText(netsdata[1]);
-            mETLastNetDate.setText(netsdata[4]);
-            mETLastTargetPrice.setText(tarsdata[3]);
-            mETTargetCurrentTime.setText(tarsdata[17] + " " + tarsdata[18].substring(0, 5));
-            mETTargetCurrentPrice.setText(tarsdata[6]);
+            String[] exsdata = exval.split(",");
+            String[] netsdata = netval.split(",");
+            String[] tarsdata = tarval.split(",");
+            // UI界面的更新等相关操作
+            try {
+                msCount = count.toString();
+                msCurrentPrice = exsdata[7];
+                msCurrentTime = exsdata[30] + " " + exsdata[31];
+                msLastdayNet = netsdata[1];
+                msLastNetDate = netsdata[4];
+                msLastTargetPrice = tarsdata[3];
+                msTargetCurrentTime = tarsdata[17] + " " + tarsdata[18].substring(0, 5);
+                msTargetCurrentPrice = tarsdata[6];
 
-         SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
-            String value = read.getString("target" + mETLastNetDate.getText().toString(), "");
-            if (value.compareTo("") == 0) {
-                mETLastTargetPrice.setTextColor(Color.BLUE);
-                OutputMessage(mETLastNetDate.getText().toString() + "Last Target Not Save err：" + value + "!=" + mETLastdayNet.getText());
-            } else if (value.compareTo(mETLastTargetPrice.getText().toString()) != 0) {
-                OutputMessage(mETLastNetDate.getText().toString() + "Data err：" + value + "!=" + mETLastTargetPrice.getText());
-                mETLastTargetPrice.setText(value);
-                mETLastTargetPrice.setTextColor(Color.RED);
-            } else {
-                OutputMessage("New data updated");
-                mETLastTargetPrice.setTextColor(Color.BLACK);
+                SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
+                String value = read.getString("target" + mETLastNetDate.getText().toString(), "");
+                if (value.compareTo("") == 0) {
+                    miLastTargetPriceTextColor = Color.BLUE;
+                    OutputMessage(msLastNetDate + "Last Target Not Save err：" + value + "!=" + msLastdayNet);
+                } else if (value.compareTo(mETLastTargetPrice.getText().toString()) != 0) {
+                    OutputMessage(mETLastNetDate.getText().toString() + "Data err：" + value + "!=" + msLastTargetPrice);
+                    msLastTargetPrice = value;
+                    miLastTargetPriceTextColor = Color.RED;
+                } else {
+                    OutputMessage("New data updated");
+                    miLastTargetPriceTextColor = Color.BLACK;
+                }
+                value = read.getString("net" + msLastNetDate, "");
+                if (value.compareTo(msLastdayNet) != 0) {
+                    OutputMessage(msLastNetDate + "Last Net Not Save err：" + value + "!=" + msLastdayNet);
+                    miLastdayNetTextColor = Color.BLUE;
+                } else {
+                    miLastdayNetTextColor = Color.BLACK;
+                }
+                msMargin = CalcMargin(msLastdayNet, msLastTargetPrice,
+                        msTargetCurrentPrice, msCurrentPrice,
+                        msCurrentTime);
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            value = read.getString("net" + mETLastNetDate.getText().toString(), "");
-            if (value.compareTo(mETLastdayNet.getText().toString()) != 0) {
-                OutputMessage(mETLastNetDate.getText().toString() + "Last Net Not Save err：" + value + "!=" + mETLastdayNet.getText());
-                mETLastdayNet.setTextColor(Color.BLUE);
-            } else {
-                mETLastdayNet.setTextColor(Color.BLACK);
-            }
-            String smargin=CalcMargin(mETLastdayNet.getText().toString(),mETLastTargetPrice.getText().toString(),
-                    mETTargetCurrentPrice.getText().toString(),mETCurrentPrice.getText().toString(),
-                    mETCurrentTime.getText().toString());
-            mETMargin.setText(smargin);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-   }
-    }
-
-    private void registerReceiver() {
-
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
-        EasySoneyActivity.this.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle data = intent.getExtras();
-                String exval = data.getString("exvalue");
-                String netval = data.getString("netvalue");
-                String tarval = data.getString("tarvalue");
-                Integer count = data.getInt("timercount");
-                FillUI(exval, netval, tarval, count);
-
-            }
-        }, intentFilter);
+        }
     }
 
 }
