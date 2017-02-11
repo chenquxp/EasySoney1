@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 
+import com.chenqu.toolbox.easysoney.EasySoneyActivity.ESData;
+
 /**
  * Created by chenqu on 2017/2/9.
  */
@@ -62,7 +64,8 @@ public class PriceMonitorService extends Service {
            String exvalue=GetHttpText(exurl);
             String netvalue=GetHttpText(neturl);
             String tarvalue=GetHttpText(tarurl);
-      //      mESActivity.FillUI(exvalue,netvalue,tarvalue,timercount);
+           ESData d=mESActivity.new ESData(exvalue,netvalue,tarvalue,timercount);
+            mESActivity.LogESData(d,"S");
 
             intent.putExtra("exvalue", exvalue);
             intent.putExtra("netvalue", netvalue);

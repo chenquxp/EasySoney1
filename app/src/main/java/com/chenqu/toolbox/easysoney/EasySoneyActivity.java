@@ -289,10 +289,12 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 mETLastTargetPrice.setText(value);
                 break;
             case R.id.bt_calc_margin:
-                //   CalcMargin();
+                String smargin=CalcMargin(mETLastdayNet.getText().toString(),mETLastTargetPrice.getText().toString(),
+                        mETTargetCurrentPrice.getText().toString(),mETCurrentPrice.getText().toString(),
+                        mETCurrentTime.getText().toString());
+                mETMargin.setText(smargin);
                 break;
             case R.id.tb_auto:
-
                 if (mTBAuto.isChecked()) {
                     mSBIntivalSeconds.setEnabled(false);
                     if (isBind) {
@@ -302,22 +304,16 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                     //      mIntentService.putExtra("intival", intivalseconds);
                     //     mIntentService.putExtra("once", false);
                     //    mIntentService.putExtra("stop", false);
+                    //bindService....
 
-                    //  isBind = true;
                 } else {
                     mSBIntivalSeconds.setEnabled(true);
                     if (isBind) {
                         mPriceService.StopContinous();
                     }
-                    //                    mIntentService = new Intent(this, PriceMonitorService.class);
-                    //              mIntentService.putExtra("intival", intivalseconds);
-                    //              mIntentService.putExtra("once", false);
-                    //              mIntentService.putExtra("stop", true);
-
                 }
                 break;
         }
-
     }
 
 
@@ -361,7 +357,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
             margin = (currtarget / lasttarget - currprice / lastnet - 0.0053) * 100;
             smargin = (margin.toString().substring(0, 5) + "%");
-            if (margin > 0.1) {
+            if (margin > 0) {
 
                 showIntentActivityNotify("Lucky time.", "Margin=" + margin.toString().substring(0, 5) + "% @" + scurrenttime, "Margin=" + margin.toString().substring(0, 5) + "% @" + scurrenttime);
             }
@@ -373,11 +369,11 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         return smargin;
     }
 
-    public void LogESData(ESData d) {
+    public void LogESData(ESData d,String flag) {
         SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
         String retStrFormatNowDate = sdFormatter.format(cal.getTime());
-        String srecord = "";
+        String srecord =flag+",";
         srecord += d.msCount + ",";
         srecord += retStrFormatNowDate + ",";
         srecord += d.msCurrentPrice + ",";
@@ -387,7 +383,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         srecord += d.msLastTargetPrice + ",";
         srecord += d.msTargetCurrentTime + ",";
         srecord += d.msTargetCurrentPrice + ",";
-        srecord += d.msMargin + "\n";
+        srecord += d.msMargin + d.errmsg;
         WriteFile("records.txt", srecord);
     }
 
@@ -474,6 +470,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             mETMargin.setText(d.msMargin);
             mETLastTargetPrice.setTextColor(d.miLastTargetPriceTextColor);
             mETLastdayNet.setTextColor(d.miLastdayNetTextColor);
+            OutputMessage(d.errmsg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -492,7 +489,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 String tarval = data.getString("tarvalue");
                 Integer count = data.getInt("timercount");
                 ESData esdata = new ESData(exval, netval, tarval, count);
-                LogESData(esdata);
+                LogESData(esdata,"A");
                 UpdateUI(esdata);
             }
         }, intentFilter);
@@ -510,6 +507,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         public String msMargin;
         public int miLastTargetPriceTextColor;
         public int miLastdayNetTextColor;
+        public  String errmsg="";
 
         ESData(String exval, String netval, String tarval, Integer count) {
             /*0：”大秦铁路”，股票名字；
@@ -560,21 +558,21 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
                 msTargetCurrentPrice = tarsdata[6];
 
                 SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
-                String value = read.getString("target" + mETLastNetDate.getText().toString(), "");
+                String value = read.getString("target" + msLastNetDate, "");
                 if (value.compareTo("") == 0) {
                     miLastTargetPriceTextColor = Color.BLUE;
-                    OutputMessage(msLastNetDate + "Last Target Not Save err：" + value + "!=" + msLastdayNet);
-                } else if (value.compareTo(mETLastTargetPrice.getText().toString()) != 0) {
-                    OutputMessage(mETLastNetDate.getText().toString() + "Data err：" + value + "!=" + msLastTargetPrice);
+                    errmsg +=msLastNetDate + "Last Target Not Save err：" + value + "!=" + msLastdayNet+"\n";
+                } else if (value.compareTo(msLastTargetPrice) != 0) {
+                    errmsg +=(msLastNetDate + "Data err：" + value + "!=" + msLastTargetPrice+"\n");
                     msLastTargetPrice = value;
                     miLastTargetPriceTextColor = Color.RED;
                 } else {
-                    OutputMessage("New data updated");
+                    errmsg +=("New data updated");
                     miLastTargetPriceTextColor = Color.BLACK;
                 }
                 value = read.getString("net" + msLastNetDate, "");
                 if (value.compareTo(msLastdayNet) != 0) {
-                    OutputMessage(msLastNetDate + "Last Net Not Save err：" + value + "!=" + msLastdayNet);
+                    errmsg +=(msLastNetDate + "Last Net Not Save err：" + value + "!=" + msLastdayNet+"\n");
                     miLastdayNetTextColor = Color.BLUE;
                 } else {
                     miLastdayNetTextColor = Color.BLACK;
