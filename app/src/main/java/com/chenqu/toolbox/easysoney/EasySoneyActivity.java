@@ -14,6 +14,9 @@ import java.util.*;
 import java.io.*;
 import java.text.*;
 
+import com.chenqu.toolbox.easysoney.PriceMonitorService.*;
+import com.chenqu.toolbox.easysoney.PriceMonitorService;
+
 
 public class EasySoneyActivity extends AppCompatActivity implements View.OnClickListener {
     private Intent mIntentService;
@@ -39,6 +42,8 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     private SeekBar mSBIntivalSeconds;
 
     private Integer intivalseconds = 60;
+    private boolean isBind = false;
+    private PriceMonitorService mPriceService;
 
     private int notifyId = 100;
     private NotificationCompat.Builder mBuilder;
@@ -48,7 +53,10 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         }
 
         public void onServiceConnected(ComponentName name, IBinder service) {
+            mPriceService = ((MyBinder) service).getMyService(); //获取Myservice对象
+            mPriceService.setMainActivity(EasySoneyActivity.this); //把当前对象传递给myservice
 
+            isBind = true;
         }
     };
 
@@ -88,7 +96,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                         snet += "net" + t + ":" + read.getString("net" + t, "") + "\n";
                     }
                     bundle.putString("text", starget + "\n" + snet);
-                    bundle.putBoolean("isdelete",false );
+                    bundle.putBoolean("isdelete", false);
                     //把附加的数据放到意图当中
                     intent.putExtras(bundle);
                     //执行意图
@@ -100,8 +108,8 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.show_records_item:
                 bundle.putString("text", ReadFile("records.txt"));
-                bundle.putBoolean("isdelete",true );
-                bundle.putString("filename","records.txt");
+                bundle.putBoolean("isdelete", true);
+                bundle.putString("filename", "records.txt");
 
                 //把附加的数据放到意图当中
                 intent.putExtras(bundle);
@@ -129,7 +137,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            intivalseconds = 30+ 30 * progress;
+            intivalseconds = 30 + 30 * progress;
             mTVIntivalSeconds.setText("AutoGet Intival:" + intivalseconds.toString() + "Seconds");
 
         }
@@ -171,11 +179,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         mETMargin = (EditText) findViewById(R.id.et_margin);
         SharedPreferences.Editor editor = getSharedPreferences("pxmlfile", MODE_WORLD_WRITEABLE).edit();
       /*  editor.putString("net2017-01-25", "1.2609");
-        editor.putString("net2017-01-26", "1.2784");
-        editor.putString("net2017-02-03", "1.2641");
         editor.putString("target2017-01-25", "23049.12");
-        editor.putString("target2017-01-26", "23374.17");
-        editor.putString("target2017-02-03", "23129.21");
         editor.commit();*/
 
         mBGetCurrentData.setFocusable(true);
@@ -186,39 +190,35 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         initNotifyService();
         initNotify();
         registerReceiver();
+        try {
+            mIntentService = new Intent(EasySoneyActivity.this, PriceMonitorService.class);
+            bindService(mIntentService, sconn, Context.BIND_AUTO_CREATE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     protected void onDestroy() {
-        //   timer.cancel();
         super.onDestroy();
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            // 创建退出对话框
             AlertDialog isExit = new AlertDialog.Builder(this).create();
-            // 设置对话框标题
             isExit.setTitle("系统提示");
-            // 设置对话框消息
             isExit.setMessage("确定要退出吗,点击取消转后台运行");
-            // 添加选择按钮并注册监听
-            isExit.setButton("确定", listener);
-            isExit.setButton2("取消", listener);
+            isExit.setButton("确定", exitdialoglistener);
+            isExit.setButton2("取消", exitdialoglistener);
             // 显示对话框
             isExit.show();
-
         }
-
         return false;
-
     }
 
-    /**
-     * 监听对话框里面的button点击事件
-     */
-    DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+
+    DialogInterface.OnClickListener exitdialoglistener = new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
                 case AlertDialog.BUTTON_POSITIVE:// "确认"按钮退出程序
@@ -245,23 +245,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
     }
 
-    Handler timerhandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-     /*       Date nowTime = new Date(System.currentTimeMillis());
-            SimpleDateFormat sdFormatter = new SimpleDateFormat("hh:mm:ss");
-            String retStrFormatNowDate = sdFormatter.format(nowTime);
-            if(retStrFormatNowDate.compareTo("09:00:00")>0){
-                mTBAuto.setChecked(false);
-         }
-         */
-            mBGetCurrentData.callOnClick();
-
-        }
-    };
-
-    boolean isBind = false;
 
     @Override
     public void onClick(View v) {
@@ -275,13 +258,14 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             case R.id.bt_getcurrdata:
                 ClearData();
                 if (isBind) {
-                    unbindService(sconn);
+                    mPriceService.RefreshOnce();
                 }
-                mIntentService = new Intent(EasySoneyActivity.this, PriceMonitorService.class);
-                mIntentService.putExtra("intival", intivalseconds);
-                mIntentService.putExtra("once", true);
-                boolean b = bindService(mIntentService, sconn, Context.BIND_AUTO_CREATE);
-                isBind = true;
+
+                //     mIntentService = new Intent(EasySoneyActivity.this, PriceMonitorService.class);
+                //     mIntentService.putExtra("intival", intivalseconds);
+                //     mIntentService.putExtra("once", true);
+                //     boolean b = bindService(mIntentService, sconn, Context.BIND_AUTO_CREATE);
+                //    isBind = true;
                 break;
             case R.id.bt_savenet:
                 editor.putString("net" + date, net);
@@ -304,33 +288,31 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 mETLastTargetPrice.setText(value);
                 break;
             case R.id.bt_calc_margin:
-                CalcMargin();
+                //   CalcMargin();
                 break;
             case R.id.tb_auto:
+
                 if (mTBAuto.isChecked()) {
                     mSBIntivalSeconds.setEnabled(false);
                     if (isBind) {
-                        unbindService(sconn);
+                        mPriceService.RefreshContinous(intivalseconds);
                     }
-                    mIntentService = new Intent(this, PriceMonitorService.class);
-                    mIntentService.putExtra("intival", intivalseconds);
-                    mIntentService.putExtra("once", false);
-                    mIntentService.putExtra("stop", false);
+                    //    mIntentService = new Intent(this, PriceMonitorService.class);
+                    //      mIntentService.putExtra("intival", intivalseconds);
+                    //     mIntentService.putExtra("once", false);
+                    //    mIntentService.putExtra("stop", false);
 
-                    bindService(mIntentService, sconn, Context.BIND_AUTO_CREATE);
-                    isBind = true;
+                    //  isBind = true;
                 } else {
                     mSBIntivalSeconds.setEnabled(true);
                     if (isBind) {
-                        unbindService(sconn);
+                        mPriceService.StopContinous();
                     }
-                    mIntentService = new Intent(this, PriceMonitorService.class);
-                    mIntentService.putExtra("intival", intivalseconds);
-                    mIntentService.putExtra("once", false);
-                    mIntentService.putExtra("stop", true);
+                    //                    mIntentService = new Intent(this, PriceMonitorService.class);
+                    //              mIntentService.putExtra("intival", intivalseconds);
+                    //              mIntentService.putExtra("once", false);
+                    //              mIntentService.putExtra("stop", true);
 
-                    bindService(mIntentService, sconn, Context.BIND_AUTO_CREATE);
-                    isBind = true;
                 }
                 break;
         }
@@ -363,24 +345,24 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     }
 
 
-    void CalcMargin() {
+    public String CalcMargin(String slastnet,String slasttarget,String scurrtarget,String scurrprice,String scurrenttime) {
         Double lasttarget;
         Double lastnet;
         Double currtarget;
         Double currprice;
         Double margin;
+        String smargin="";
         try {
-            lastnet = Double.parseDouble(mETLastdayNet.getText().toString());
-            lasttarget = Double.parseDouble(mETLastTargetPrice.getText().toString());
-            currtarget = Double.parseDouble(mETTargetCurrentPrice.getText().toString());
-            currprice = Double.parseDouble(mETCurrentPrice.getText().toString());
+            lastnet = Double.parseDouble(slastnet);
+             lasttarget = Double.parseDouble(slasttarget);
+            currtarget = Double.parseDouble(scurrtarget);
+            currprice = Double.parseDouble(scurrprice);
 
-            margin = currtarget / lasttarget - currprice / lastnet - 0.0053;
-            margin *= 100;
-            mETMargin.setText(margin.toString().substring(0, 5) + "%");
+            margin = (currtarget / lasttarget - currprice / lastnet - 0.0053)*100;
+            smargin=(margin.toString().substring(0, 5) + "%");
             if (margin > 0.1) {
 
-                showIntentActivityNotify("Lucky time.", "Margin=" + margin.toString().substring(0, 5) + "% @" + mETCurrentTime.getText().toString(), "Margin=" + margin.toString().substring(0, 5) + "% @" + mETCurrentTime.getText().toString());
+                showIntentActivityNotify("Lucky time.", "Margin=" + margin.toString().substring(0, 5) + "% @" + scurrenttime, "Margin=" + margin.toString().substring(0, 5) + "% @" + scurrenttime);
             }
 
             SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -401,6 +383,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return smargin;
     }
 
 
@@ -473,19 +456,8 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
     }
 
-    private void registerReceiver() {
-
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
-        EasySoneyActivity.this.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle data = intent.getExtras();
-                String exval = data.getString("exvalue");
-                String netval = data.getString("netvalue");
-                String tarval = data.getString("tarvalue");
-                Integer count=data.getInt("timercount");
-/*0：”大秦铁路”，股票名字；
+    public void FillUI(String exval, String netval, String tarval, Integer count) {
+    /*0：”大秦铁路”，股票名字；
 1：”27.55″，今日开盘价；
 2：”27.25″，昨日收盘价；
 3：”26.91″，当前价格；
@@ -518,44 +490,64 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
 05 当日最低
 06 当前价
 */
-                String[] exsdata = exval.split(",");
-                String[] netsdata = netval.split(",");
-                String[] tarsdata = tarval.split(",");
-                // UI界面的更新等相关操作
-                try {
-                    mTVCount.setText(count.toString());
-                    mETCurrentPrice.setText(exsdata[7]);
-                    mETCurrentTime.setText(exsdata[30] + " " + exsdata[31]);
-                    mETLastdayNet.setText(netsdata[1]);
-                    mETLastNetDate.setText(netsdata[4]);
-                    mETLastTargetPrice.setText(tarsdata[3]);
-                    mETTargetCurrentTime.setText(tarsdata[17] + " " + tarsdata[18].substring(0, 5));
-                    mETTargetCurrentPrice.setText(tarsdata[6]);
+        String[] exsdata = exval.split(",");
+        String[] netsdata = netval.split(",");
+        String[] tarsdata = tarval.split(",");
+        // UI界面的更新等相关操作
+       try {
+            mTVCount.setText(count.toString());
+              mETCurrentPrice.setText(exsdata[7]);
+            mETCurrentTime.setText(exsdata[30] + " " + exsdata[31]);
+            mETLastdayNet.setText(netsdata[1]);
+            mETLastNetDate.setText(netsdata[4]);
+            mETLastTargetPrice.setText(tarsdata[3]);
+            mETTargetCurrentTime.setText(tarsdata[17] + " " + tarsdata[18].substring(0, 5));
+            mETTargetCurrentPrice.setText(tarsdata[6]);
 
-                    SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
-                    String value = read.getString("target" + mETLastNetDate.getText().toString(), "");
-                    if (value.compareTo("") == 0) {
-                        mETLastTargetPrice.setTextColor(Color.BLUE);
-                        OutputMessage(mETLastNetDate.getText().toString() + "Last Target Not Save err：" + value + "!=" + mETLastdayNet.getText());
-                    } else if (value.compareTo(mETLastTargetPrice.getText().toString()) != 0) {
-                        OutputMessage(mETLastNetDate.getText().toString() + "Data err：" + value + "!=" + mETLastTargetPrice.getText());
-                        mETLastTargetPrice.setText(value);
-                        mETLastTargetPrice.setTextColor(Color.RED);
-                    } else {
-                        OutputMessage("New data updated");
-                        mETLastTargetPrice.setTextColor(Color.BLACK);
-                    }
-                    value = read.getString("net" + mETLastNetDate.getText().toString(), "");
-                    if (value.compareTo(mETLastdayNet.getText().toString()) != 0) {
-                        OutputMessage(mETLastNetDate.getText().toString() + "Last Net Not Save err：" + value + "!=" + mETLastdayNet.getText());
-                        mETLastdayNet.setTextColor(Color.BLUE);
-                    } else {
-                        mETLastdayNet.setTextColor(Color.BLACK);
-                    }
-                    CalcMargin();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+         SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
+            String value = read.getString("target" + mETLastNetDate.getText().toString(), "");
+            if (value.compareTo("") == 0) {
+                mETLastTargetPrice.setTextColor(Color.BLUE);
+                OutputMessage(mETLastNetDate.getText().toString() + "Last Target Not Save err：" + value + "!=" + mETLastdayNet.getText());
+            } else if (value.compareTo(mETLastTargetPrice.getText().toString()) != 0) {
+                OutputMessage(mETLastNetDate.getText().toString() + "Data err：" + value + "!=" + mETLastTargetPrice.getText());
+                mETLastTargetPrice.setText(value);
+                mETLastTargetPrice.setTextColor(Color.RED);
+            } else {
+                OutputMessage("New data updated");
+                mETLastTargetPrice.setTextColor(Color.BLACK);
+            }
+            value = read.getString("net" + mETLastNetDate.getText().toString(), "");
+            if (value.compareTo(mETLastdayNet.getText().toString()) != 0) {
+                OutputMessage(mETLastNetDate.getText().toString() + "Last Net Not Save err：" + value + "!=" + mETLastdayNet.getText());
+                mETLastdayNet.setTextColor(Color.BLUE);
+            } else {
+                mETLastdayNet.setTextColor(Color.BLACK);
+            }
+            String smargin=CalcMargin(mETLastdayNet.getText().toString(),mETLastTargetPrice.getText().toString(),
+                    mETTargetCurrentPrice.getText().toString(),mETCurrentPrice.getText().toString(),
+                    mETCurrentTime.getText().toString());
+            mETMargin.setText(smargin);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+   }
+    }
+
+    private void registerReceiver() {
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
+        EasySoneyActivity.this.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle data = intent.getExtras();
+                String exval = data.getString("exvalue");
+                String netval = data.getString("netvalue");
+                String tarval = data.getString("tarvalue");
+                Integer count = data.getInt("timercount");
+                FillUI(exval, netval, tarval, count);
+
             }
         }, intentFilter);
     }

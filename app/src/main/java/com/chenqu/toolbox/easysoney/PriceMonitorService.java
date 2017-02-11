@@ -3,6 +3,7 @@ package com.chenqu.toolbox.easysoney;
 import android.app.*;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -37,15 +38,15 @@ public class PriceMonitorService extends Service {
      * @return Return an IBinder through which clients can call on to the
      * service.
      */
+    private EasySoneyActivity mESActivity;
 
-    private static Timer timer;
-    private int intival;
+    private  Timer timer;
     private boolean once;
     private String exurl = "http://hq.sinajs.cn/list=sz159920";
     private String neturl = "http://hq.sinajs.cn/list=f_159920";
     private String tarurl = "http://hq.sinajs.cn/list=hkHSI";
-    private static int timercount=0;
-    Handler timerhandler = new Handler() {
+    private  int timercount = 0;
+        Handler timerhandler = new Handler() {
 
         @Override
         public void handleMessage(Message msg) {
@@ -58,12 +59,18 @@ public class PriceMonitorService extends Service {
         public void run() {
             timercount++;
             Intent intent = new Intent();
-            intent.putExtra("exvalue", GetHttpText(exurl));
-            intent.putExtra("netvalue", GetHttpText(neturl));
-            intent.putExtra("tarvalue", GetHttpText(tarurl));
+           String exvalue=GetHttpText(exurl);
+            String netvalue=GetHttpText(neturl);
+            String tarvalue=GetHttpText(tarurl);
+      //      mESActivity.FillUI(exvalue,netvalue,tarvalue,timercount);
+
+            intent.putExtra("exvalue", exvalue);
+            intent.putExtra("netvalue", netvalue);
+            intent.putExtra("tarvalue", tarvalue);
             intent.putExtra("timercount", timercount);
             intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
-            sendBroadcast(intent);
+          sendBroadcast(intent);
+
         }
     };
 
@@ -73,51 +80,54 @@ public class PriceMonitorService extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        intival = intent.getIntExtra("intival", 1);
-        once = intent.getBooleanExtra("once", true);
-        boolean stop=intent.getBooleanExtra("stop", false);
-        if (once ) {
-            try {
-                Timer timer1 = new Timer();
-                timer1.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        Message msg = new Message();
-                        msg.what = 0;
-                        timerhandler.sendMessage(msg);
-                    }
-                }, 1);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else if(!stop){
-            if(timer!=null)
-            {timer.cancel();}
-            try {
-                timer = new Timer();
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        Message msg = new Message();
-                        msg.what = 0;
-                        timerhandler.sendMessage(msg);
-                    }
-                }, 1000, intival * 1000);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        else
-        {
-            if(timer!=null)
-            {timer.cancel();}
-         }
-        return null;
+    public MyBinder onBind(Intent intent) {
+        return new MyBinder();
     }
 
+    public void setMainActivity(EasySoneyActivity activity)
+    {
+             this.mESActivity=activity;
+          }
+
+    public void RefreshOnce(){
+        try {
+            Timer oncetimer= new Timer();
+            oncetimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Message msg = new Message();
+                    msg.what = 0;
+                    timerhandler.sendMessage(msg);
+                }
+            }, 1);
+
+        } catch (Exception e) {
+            e.printStackTrace();}
+
+    }
+
+    public void RefreshContinous(int i){
+       try{
+           timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Message msg = new Message();
+                msg.what = 0;
+                timerhandler.sendMessage(msg);
+            }
+        },i* 1000, i * 1000);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+
+    }
+    }
+        public void StopContinous()
+        {
+            timer.cancel();
+
+        }
 
     String GetHttpText(String url) {
         byte[] b = new byte[512];
@@ -144,4 +154,12 @@ public class PriceMonitorService extends Service {
         }
         return bo.toString();
     }
+    class MyBinder extends Binder
+    {
+        public PriceMonitorService getMyService()
+        {
+            return PriceMonitorService.this;
+        }
+    }
+
 }
