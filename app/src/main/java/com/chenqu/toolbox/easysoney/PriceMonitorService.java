@@ -23,6 +23,7 @@ import com.chenqu.toolbox.easysoney.EasySoneyActivity.ESData;
  */
 
 public class PriceMonitorService extends Service {
+    PowerManager.WakeLock mWakeLock;
     /**
      * Return the communication channel to the service.  May return null if
      * clients can not bind to the service.  The returned
@@ -44,14 +45,34 @@ public class PriceMonitorService extends Service {
      * service.
      */
     private EasySoneyActivity mESActivity;
-    PowerManager.WakeLock mWakeLock;
-
     private Timer timer;
     private boolean once;
     private String exurl = "http://hq.sinajs.cn/list=sz159920";
     private String neturl = "http://hq.sinajs.cn/list=f_159920";
     private String tarurl = "http://hq.sinajs.cn/list=hkHSI";
     private int timercount = 0;
+    Runnable networkTask = new Runnable() {
+        @Override
+        public void run() {
+            timercount++;
+            Intent intent = new Intent();
+            String exvalue = GetHttpText(exurl);
+            String netvalue = GetHttpText(neturl);
+            String tarvalue = GetHttpText(tarurl);
+            //ESData d=mESActivity.new ESData(exvalue,netvalue,tarvalue,timercount);
+            //mESActivity.LogESData(d,"S");
+            // mESActivity.SendESNotify(d);
+            TestWriteFile("records.txt", "ServiceWriteTest\n");
+
+            intent.putExtra("exvalue", exvalue);
+            intent.putExtra("netvalue", netvalue);
+            intent.putExtra("tarvalue", tarvalue);
+            intent.putExtra("timercount", timercount);
+            intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
+            sendBroadcast(intent);
+
+        }
+    };
     Handler timerhandler = new Handler() {
 
         @Override
@@ -124,29 +145,6 @@ public class PriceMonitorService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    Runnable networkTask = new Runnable() {
-        @Override
-        public void run() {
-            timercount++;
-            Intent intent = new Intent();
-            String exvalue = GetHttpText(exurl);
-            String netvalue = GetHttpText(neturl);
-            String tarvalue = GetHttpText(tarurl);
-            //ESData d=mESActivity.new ESData(exvalue,netvalue,tarvalue,timercount);
-            //mESActivity.LogESData(d,"S");
-           // mESActivity.SendESNotify(d);
-            TestWriteFile("records.txt", "ServiceWriteTest\n");
-
-            intent.putExtra("exvalue", exvalue);
-            intent.putExtra("netvalue", netvalue);
-            intent.putExtra("tarvalue", tarvalue);
-            intent.putExtra("timercount", timercount);
-            intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
-            sendBroadcast(intent);
-
-        }
-    };
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -194,13 +192,11 @@ public class PriceMonitorService extends Service {
 
         } catch (Exception e) {
             e.printStackTrace();
-
         }
     }
 
     public void StopContinous() {
         timer.cancel();
-
     }
 
     /**
@@ -241,12 +237,6 @@ public class PriceMonitorService extends Service {
         return bo.toString();
     }
 
-    class MyBinder extends Binder {
-        public PriceMonitorService getMyService() {
-            return PriceMonitorService.this;
-        }
-    }
-
     public void TestWriteFile(String filename, String msg) {
         // 步骤1：获取输入值
         if (msg == null) return;
@@ -260,6 +250,12 @@ public class PriceMonitorService extends Service {
             fos.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    class MyBinder extends Binder {
+        public PriceMonitorService getMyService() {
+            return PriceMonitorService.this;
         }
     }
 }
