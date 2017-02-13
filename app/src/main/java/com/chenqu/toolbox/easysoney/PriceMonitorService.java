@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
@@ -24,6 +25,14 @@ import com.chenqu.toolbox.easysoney.EasySoneyActivity.ESData;
 
 public class PriceMonitorService extends Service {
     PowerManager.WakeLock mWakeLock;
+    Handler timerhandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            new Thread(networkTask).start();
+        }
+    };
     /**
      * Return the communication channel to the service.  May return null if
      * clients can not bind to the service.  The returned
@@ -71,14 +80,6 @@ public class PriceMonitorService extends Service {
             intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
             sendBroadcast(intent);
 
-        }
-    };
-    Handler timerhandler = new Handler() {
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            new Thread(networkTask).start();
         }
     };
 
@@ -148,11 +149,40 @@ public class PriceMonitorService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        acquireWakeLock();
+        //  acquireWakeLock();
+        useForeground("EasySoney", "Quick Access");
+
+    }
+
+    public void useForeground(CharSequence tickerText, String contentText) {
+        Intent notificationIntent = new Intent(getApplicationContext(), EasySoneyActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
+          /* Method 01
+05.     * this method must SET SMALLICON!
+06.     * otherwise it can't do what we want in Android 4.4 KitKat,
+07.     * it can only show the application info page which contains the 'Force Close' button.*/
+        NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(PriceMonitorService.this)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setTicker(tickerText)
+                .setWhen(System.currentTimeMillis())
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText(contentText)
+                .setContentIntent(pendingIntent);
+        Notification notification = mNotifyBuilder.build();
+
+           /* Method 02
+18.    Notification notification = new Notification(R.drawable.ic_launcher, tickerText,
+19.            System.currentTimeMillis());
+20.    notification.setLatestEventInfo(PlayService.this, getText(R.string.app_name),
+21.            currSong, pendingIntent);
+22.    */
+
+        startForeground(101, notification);
     }
 
     @Override
     public MyBinder onBind(Intent intent) {
+
         return new MyBinder();
     }
 
@@ -208,7 +238,8 @@ public class PriceMonitorService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        releaseWakeLock();
+        //releaseWakeLock();
+        stopForeground(true);
     }
 
     String GetHttpText(String url) {
