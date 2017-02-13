@@ -15,7 +15,6 @@ import java.io.*;
 import java.text.*;
 
 import com.chenqu.toolbox.easysoney.PriceMonitorService.*;
-import com.chenqu.toolbox.easysoney.PriceMonitorService;
 
 
 public class EasySoneyActivity extends AppCompatActivity implements View.OnClickListener {
@@ -202,6 +201,9 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(isBind) {
+            unbindService(sconn);
+        }
     }
 
     @Override
@@ -289,10 +291,9 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 mETLastTargetPrice.setText(value);
                 break;
             case R.id.bt_calc_margin:
-                String smargin=CalcMargin(mETLastdayNet.getText().toString(),mETLastTargetPrice.getText().toString(),
-                        mETTargetCurrentPrice.getText().toString(),mETCurrentPrice.getText().toString(),
-                        mETCurrentTime.getText().toString());
-                mETMargin.setText(smargin);
+                Double dmargin=CalcMargin(mETLastdayNet.getText().toString(),mETLastTargetPrice.getText().toString(),
+                        mETTargetCurrentPrice.getText().toString(),mETCurrentPrice.getText().toString());
+                mETMargin.setText(dmargin.toString().substring(0, 5) + "%");
                 break;
             case R.id.tb_auto:
                 if (mTBAuto.isChecked()) {
@@ -342,13 +343,12 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     }
 
 
-    public String CalcMargin(String slastnet, String slasttarget, String scurrtarget, String scurrprice, String scurrenttime) {
+    public Double CalcMargin(String slastnet, String slasttarget, String scurrtarget, String scurrprice) {
         Double lasttarget;
         Double lastnet;
         Double currtarget;
         Double currprice;
-        Double margin;
-        String smargin = "";
+        Double margin=0.0;
         try {
             lastnet = Double.parseDouble(slastnet);
             lasttarget = Double.parseDouble(slasttarget);
@@ -356,17 +356,10 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             currprice = Double.parseDouble(scurrprice);
 
             margin = (currtarget / lasttarget - currprice / lastnet - 0.0053) * 100;
-            smargin = (margin.toString().substring(0, 5) + "%");
-            if (margin > 0) {
-
-                showIntentActivityNotify("Lucky time.", "Margin=" + margin.toString().substring(0, 5) + "% @" + scurrenttime, "Margin=" + margin.toString().substring(0, 5) + "% @" + scurrenttime);
-            }
-
-
-        } catch (Exception e) {
+              } catch (Exception e) {
             e.printStackTrace();
         }
-        return smargin;
+        return margin;
     }
 
     public void LogESData(ESData d,String flag) {
@@ -383,7 +376,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         srecord += d.msLastTargetPrice + ",";
         srecord += d.msTargetCurrentTime + ",";
         srecord += d.msTargetCurrentPrice + ",";
-        srecord += d.msMargin + d.errmsg;
+        srecord += d.mDMargin.toString().substring(0, 5) + "%"+"\n" + d.errmsg;
         WriteFile("records.txt", srecord);
     }
 
@@ -430,7 +423,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             while ((hasRead = inStream.read(buffer)) != -1) {
                 sb.append(new String(buffer, 0, hasRead));
             }
-
             inStream.close();
             return sb.toString();
         } catch (Exception e) {
@@ -444,8 +436,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         if (msg == null) return;
         try {
             // 步骤2:创建一个FileOutputStream对象,MODE_APPEND追加模式.重写用PRIVATE
-            FileOutputStream fos = openFileOutput(filename,
-                    MODE_APPEND);
+            FileOutputStream fos = openFileOutput(filename,MODE_APPEND);
             // 步骤3：将获取过来的值放入文件
             fos.write(msg.getBytes());
             // 步骤4：关闭数据流
@@ -454,26 +445,31 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             e.printStackTrace();
         }
     }
-
+public void SendESNotify(ESData d){
+    if (d.mDMargin > 0) {
+        String smargin  = (d.mDMargin.toString().substring(0, 5) + "%");
+        showIntentActivityNotify("Lucky time.", "Margin=" + smargin + " @" + d.msCurrentTime, "Margin=" + smargin + " @" + d.msCurrentTime);
+    }
+}
     public void UpdateUI(ESData d) {
+        String smargin  = (d.mDMargin.toString().substring(0, 5) + "%");
+            try {
+                mTVCount.setText(d.msCount);
+                mETCurrentPrice.setText(d.msCurrentPrice);
+                mETCurrentTime.setText(d.msCurrentTime);
+                mETLastdayNet.setText(d.msLastdayNet);
+                mETLastNetDate.setText(d.msLastNetDate);
+                mETLastTargetPrice.setText(d.msLastTargetPrice);
+                mETTargetCurrentTime.setText(d.msTargetCurrentTime);
+                mETTargetCurrentPrice.setText(d.msTargetCurrentPrice);
+                mETMargin.setText(smargin);
+                mETLastTargetPrice.setTextColor(d.miLastTargetPriceTextColor);
+                mETLastdayNet.setTextColor(d.miLastdayNetTextColor);
+                OutputMessage(d.errmsg);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-        // UI界面的更新等相关操作
-        try {
-            mTVCount.setText(d.msCount);
-            mETCurrentPrice.setText(d.msCurrentPrice);
-            mETCurrentTime.setText(d.msCurrentTime);
-            mETLastdayNet.setText(d.msLastdayNet);
-            mETLastNetDate.setText(d.msLastNetDate);
-            mETLastTargetPrice.setText(d.msLastTargetPrice);
-            mETTargetCurrentTime.setText(d.msTargetCurrentTime);
-            mETTargetCurrentPrice.setText(d.msTargetCurrentPrice);
-            mETMargin.setText(d.msMargin);
-            mETLastTargetPrice.setTextColor(d.miLastTargetPriceTextColor);
-            mETLastdayNet.setTextColor(d.miLastdayNetTextColor);
-            OutputMessage(d.errmsg);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private void registerReceiver() {
@@ -491,6 +487,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 ESData esdata = new ESData(exval, netval, tarval, count);
                 LogESData(esdata,"A");
                 UpdateUI(esdata);
+                SendESNotify(esdata);
             }
         }, intentFilter);
     }
@@ -504,7 +501,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         public String msLastTargetPrice;
         public String msTargetCurrentTime;
         public String msTargetCurrentPrice;
-        public String msMargin;
+        public Double mDMargin;
         public int miLastTargetPriceTextColor;
         public int miLastdayNetTextColor;
         public  String errmsg="";
@@ -567,7 +564,6 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
                     msLastTargetPrice = value;
                     miLastTargetPriceTextColor = Color.RED;
                 } else {
-                    errmsg +=("New data updated");
                     miLastTargetPriceTextColor = Color.BLACK;
                 }
                 value = read.getString("net" + msLastNetDate, "");
@@ -577,9 +573,9 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
                 } else {
                     miLastdayNetTextColor = Color.BLACK;
                 }
-                msMargin = CalcMargin(msLastdayNet, msLastTargetPrice,
-                        msTargetCurrentPrice, msCurrentPrice,
-                        msCurrentTime);
+                mDMargin = CalcMargin(msLastdayNet, msLastTargetPrice,
+                        msTargetCurrentPrice, msCurrentPrice);
+                errmsg +=("Data Refreshed\n");
 
             } catch (Exception e) {
                 e.printStackTrace();
