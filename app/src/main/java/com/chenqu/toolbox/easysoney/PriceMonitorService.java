@@ -25,14 +25,6 @@ import com.chenqu.toolbox.easysoney.EasySoneyActivity.ESData;
 
 public class PriceMonitorService extends Service {
     PowerManager.WakeLock mWakeLock;
-    Handler timerhandler = new Handler() {
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            new Thread(networkTask).start();
-        }
-    };
     /**
      * Return the communication channel to the service.  May return null if
      * clients can not bind to the service.  The returned
@@ -80,6 +72,14 @@ public class PriceMonitorService extends Service {
             intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
             sendBroadcast(intent);
 
+        }
+    };
+    Handler timerhandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            new Thread(networkTask).start();
         }
     };
 
@@ -156,7 +156,7 @@ public class PriceMonitorService extends Service {
 
     public void useForeground(CharSequence tickerText, String contentText) {
         Intent notificationIntent = new Intent(getApplicationContext(), EasySoneyActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
           /* Method 01
 05.     * this method must SET SMALLICON!
 06.     * otherwise it can't do what we want in Android 4.4 KitKat,

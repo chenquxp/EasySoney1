@@ -8,14 +8,19 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".EasySoneyActivity">
+        <activity
+            android:name=".EasySoneyActivity"
+            android:launchMode="singleTask">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ShowRecentDataActivity">
+        <activity
+            android:name=".ShowRecentDataActivity"
+            android:launchMode="singleTask">
         </activity>
         <service android:name=".PriceMonitorService" />
 
