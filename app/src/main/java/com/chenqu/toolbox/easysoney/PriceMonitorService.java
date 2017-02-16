@@ -25,14 +25,6 @@ import com.chenqu.toolbox.easysoney.EasySoneyActivity.ESData;
 
 public class PriceMonitorService extends Service {
     PowerManager.WakeLock mWakeLock;
-    Handler timerhandler = new Handler() {
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            new Thread(networkTask).start();
-        }
-    };
     /**
      * Return the communication channel to the service.  May return null if
      * clients can not bind to the service.  The returned
@@ -59,6 +51,7 @@ public class PriceMonitorService extends Service {
     private String exurl = "http://hq.sinajs.cn/list=sz159920";
     private String neturl = "http://hq.sinajs.cn/list=f_159920";
     private String tarurl = "http://hq.sinajs.cn/list=hkHSI";
+    private String feurl = "http://hq.sinajs.cn/list=USDCNY";
     private int timercount = 0;
     Runnable networkTask = new Runnable() {
         @Override
@@ -68,7 +61,8 @@ public class PriceMonitorService extends Service {
             String exvalue = GetHttpText(exurl);
             String netvalue = GetHttpText(neturl);
             String tarvalue = GetHttpText(tarurl);
-            ESData d = mESActivity.new ESData(exvalue, netvalue, tarvalue, timercount);
+            String fevalue = GetHttpText(feurl);
+            ESData d = mESActivity.new ESData(exvalue, netvalue, tarvalue, fevalue, timercount);
             mESActivity.LogESData(d, "S");
             mESActivity.SendESNotify(d);
             // TestWriteFile("records.txt", "ServiceWriteTest\n");
@@ -76,10 +70,19 @@ public class PriceMonitorService extends Service {
             intent.putExtra("exvalue", exvalue);
             intent.putExtra("netvalue", netvalue);
             intent.putExtra("tarvalue", tarvalue);
+            intent.putExtra("fevalue", fevalue);
             intent.putExtra("timercount", timercount);
             intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
             sendBroadcast(intent);
 
+        }
+    };
+    Handler timerhandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            new Thread(networkTask).start();
         }
     };
 
@@ -150,7 +153,7 @@ public class PriceMonitorService extends Service {
     public void onCreate() {
         super.onCreate();
         //  acquireWakeLock();
-        useForeground("EasySoney", "Quick Access");
+        useForeground("EasySoney", "Foreground Quick Access");
 
     }
 

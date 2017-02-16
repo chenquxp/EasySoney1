@@ -65,10 +65,11 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             String exval = data.getString("exvalue");
             String netval = data.getString("netvalue");
             String tarval = data.getString("tarvalue");
+            String feval = data.getString("fevalue");
             Integer count = data.getInt("timercount");
-            ESData esdata = new ESData(exval, netval, tarval, count);
+            ESData esdata = new ESData(exval, netval, tarval, feval, count);
             //  LogESData(esdata, "A");
-            UpdateUI(esdata);
+            UpdateUI(esdata, false);
             //  SendESNotify(esdata);
         }
     };
@@ -137,7 +138,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                     starget += "target" + t + ":" + read.getString("target" + t, "") + "\n";
                     snet += "net" + t + ":" + read.getString("net" + t, "") + "\n";
 
-                    for (int i = 8; i >= 0; i--) {
+                    for (int i = 10; i >= 0; i--) {
                         calendar.add(Calendar.DATE, -1);
                         dt = calendar.getTime();
                         t = format.format(dt);
@@ -300,7 +301,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 mETLastTargetPrice.setText(value);
                 break;
             case R.id.bt_calc_margin:
-                Double dmargin = CalcMargin(mETLastdayNet.getText().toString(), mETLastTargetPrice.getText().toString(),
+                Double dmargin = CalcMarginPercent(mETLastdayNet.getText().toString(), mETLastTargetPrice.getText().toString(),
                         mETTargetCurrentPrice.getText().toString(), mETCurrentPrice.getText().toString());
                 mETMargin.setText(dmargin.toString().substring(0, 5) + "%");
                 break;
@@ -336,6 +337,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         mETTargetCurrentTime.setText("");
         mETTargetCurrentPrice.setText("");
         mETMargin.setText("");
+        mETUSDCNYIncrease.setText("");
     }
 
     private void initNotify() {
@@ -352,7 +354,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     }
 
 
-    public Double CalcMargin(String slastnet, String slasttarget, String scurrtarget, String scurrprice) {
+    public Double CalcMarginPercent(String slastnet, String slasttarget, String scurrtarget, String scurrprice) {
         Double lasttarget;
         Double lastnet;
         Double currtarget;
@@ -372,21 +374,26 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     }
 
     public void LogESData(ESData d, String flag) {
-        SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
-        String retStrFormatNowDate = sdFormatter.format(cal.getTime());
-        String srecord = flag + ",";
-        srecord += d.msCount + ",";
-        srecord += retStrFormatNowDate + ",";
-        srecord += d.msCurrentPrice + ",";
-        srecord += d.msCurrentTime + ",";
-        srecord += d.msLastdayNet + ",";
-        srecord += d.msLastNetDate + ",";
-        srecord += d.msLastTargetPrice + ",";
-        srecord += d.msTargetCurrentTime + ",";
-        srecord += d.msTargetCurrentPrice + ",";
-        srecord += d.mDMargin.toString().substring(0, 5) + "%" + "\n" + d.errmsg;
-        WriteFile("records.txt", srecord);
+        try {
+            SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
+            String retStrFormatNowDate = sdFormatter.format(cal.getTime());
+            String srecord = flag + ",";
+            srecord += d.msCount + ",";
+            srecord += retStrFormatNowDate + ",";
+            srecord += d.msCurrentPrice + ",";
+            srecord += d.msCurrentTime + ",";
+            srecord += d.msLastdayNet + ",";
+            srecord += d.msLastNetDate + ",";
+            srecord += d.msLastTargetPrice + ",";
+            srecord += d.msTargetCurrentTime + ",";
+            srecord += d.msTargetCurrentPrice + ",";
+            srecord += d.mDForeignExchangeIncreasePercent.toString().substring(0, 5) + "%,";
+            srecord += d.mDMarginPercent.toString().substring(0, 5) + "%" + "\n" + d.errmsg;
+            WriteFile("records.txt", srecord);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public PendingIntent getDefalutIntent(int flags) {
@@ -456,15 +463,16 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     }
 
     public void SendESNotify(ESData d) {
-        if (d.mDMargin > 0) {
-            String smargin = (d.mDMargin.toString().substring(0, 5) + "%");
+        if (d.mDMarginPercent > 0) {
+            String smargin = (d.mDMarginPercent.toString().substring(0, 5) + "%");
             showIntentActivityNotify("Lucky time.", "Margin=" + smargin + " @" + d.msCurrentTime, "Margin=" + smargin + " @" + d.msCurrentTime);
         }
     }
 
-    public void UpdateUI(ESData d) {
-        String smargin = (d.mDMargin.toString().substring(0, 5) + "%");
+    public void UpdateUI(ESData d, boolean ismute) {
         try {
+            String smargin = (d.mDMarginPercent.toString().substring(0, 5) + "%");
+            String sfeincrease = (d.mDForeignExchangeIncreasePercent.toString().substring(0, 5) + "%");
             mTVCount.setText(d.msCount);
             mETCurrentPrice.setText(d.msCurrentPrice);
             mETCurrentTime.setText(d.msCurrentTime);
@@ -474,11 +482,15 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             mETTargetCurrentTime.setText(d.msTargetCurrentTime);
             mETTargetCurrentPrice.setText(d.msTargetCurrentPrice);
             mETMargin.setText(smargin);
+            mETUSDCNYIncrease.setText(sfeincrease);
             mETLastTargetPrice.setTextColor(d.miLastTargetPriceTextColor);
             mETLastdayNet.setTextColor(d.miLastdayNetTextColor);
-            OutputMessage(d.errmsg);
+            if (!ismute) {
+                OutputMessage(d.errmsg);
+            }
         } catch (Exception e) {
             e.printStackTrace();
+
         }
 
     }
@@ -499,12 +511,13 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         public String msLastTargetPrice;
         public String msTargetCurrentTime;
         public String msTargetCurrentPrice;
-        public Double mDMargin;
+        public Double mDMarginPercent;
+        public Double mDForeignExchangeIncreasePercent;
         public int miLastTargetPriceTextColor;
         public int miLastdayNetTextColor;
         public String errmsg = "";
 
-        ESData(String exval, String netval, String tarval, Integer count) {
+        ESData(String exval, String netval, String tarval, String feval, Integer count) {
             /*0：”大秦铁路”，股票名字；
 1：”27.55″，今日开盘价；
 2：”27.25″，昨日收盘价；
@@ -539,12 +552,17 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
 06 当前价
 
 var hq_str_USDCNY="22:06:02,6.8742,6.8780,6.8648,136,6.8678,6.8742,6.8606,6.8742,美元人民币,2017-02-15";
-01 当前价，？，03昨收，04波动点数，?,06最高，07最低，?
+var hq_str_USDCNY="15:38:03,6.8604,6.8654,6.8684,137,6.8686,6.8686,6.8549,6.8604,美元人民币,2017-02-16";
+
+
+01 当前价，？，03今开，04波动点数，05昨收,06最高，07最低，?
 
 */
             String[] exsdata = exval.split(",");
             String[] netsdata = netval.split(",");
             String[] tarsdata = tarval.split(",");
+            String[] fesdata = feval.split(",");
+
             // UI界面的更新等相关操作
             try {
                 msCount = count.toString();
@@ -555,7 +573,7 @@ var hq_str_USDCNY="22:06:02,6.8742,6.8780,6.8648,136,6.8678,6.8742,6.8606,6.8742
                 msLastTargetPrice = tarsdata[3];
                 msTargetCurrentTime = tarsdata[17] + " " + tarsdata[18].substring(0, 5);
                 msTargetCurrentPrice = tarsdata[6];
-
+                mDForeignExchangeIncreasePercent = (Double.parseDouble(fesdata[1]) / Double.parseDouble(fesdata[5]) - 1) * 100;
                 SharedPreferences read = getSharedPreferences("pxmlfile", MODE_PRIVATE);
                 String value = read.getString("target" + msLastNetDate, "");
                 if (value.compareTo("") == 0) {
@@ -575,7 +593,7 @@ var hq_str_USDCNY="22:06:02,6.8742,6.8780,6.8648,136,6.8678,6.8742,6.8606,6.8742
                 } else {
                     miLastdayNetTextColor = Color.BLACK;
                 }
-                mDMargin = CalcMargin(msLastdayNet, msLastTargetPrice,
+                mDMarginPercent = CalcMarginPercent(msLastdayNet, msLastTargetPrice,
                         msTargetCurrentPrice, msCurrentPrice);
                 errmsg += ("Data Refreshed\n");
 

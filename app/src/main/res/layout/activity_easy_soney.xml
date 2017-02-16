@@ -297,19 +297,6 @@
         android:text="0.00"
         android:textSize="10sp" />
 
-    <EditText
-        android:id="@+id/et_usdcny_increase"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/tv_usdcny"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="130dp"
-        android:ems="10"
-        android:inputType="numberDecimal"
-        android:text="0.00%"
-        android:textSize="10sp"
-        android:visibility="invisible" />
-
     <TextView
         android:id="@+id/tv_usdcny"
         android:layout_width="wrap_content"
@@ -318,6 +305,17 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginBottom="20dp"
-        android:text="USDCNY Increase:"
-        android:visibility="invisible" />
+        android:text="USDCNY Increase:" />
+
+    <EditText
+        android:id="@+id/et_usdcny_increase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tv_usdcny"
+        android:layout_alignLeft="@+id/et_margin"
+        android:layout_alignStart="@+id/et_margin"
+        android:ems="10"
+        android:inputType="numberDecimal"
+        android:text="0.00%"
+        android:textSize="10sp" />
 </RelativeLayout>
