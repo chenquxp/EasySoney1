@@ -12,292 +12,312 @@
 
 
     <TextView
-        android:text="Current Time:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/tv_current_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
         android:layout_below="@+id/tv_current_price"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="20dp"/>
+        android:layout_marginTop="15dp"
+        android:text="Current Time:" />
+
     <TextView
-        android:text="LastDay Net:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/tv_lastday_net"
-        android:layout_below="@+id/tv_current_time"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="20dp" />
-    <TextView
-        android:text="Last Net Date:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/tv_last_net_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
         android:layout_below="@+id/tv_lastday_net"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="20dp" />
+        android:layout_marginTop="15dp"
+        android:text="Last Net Date:" />
     <TextView
-        android:text="Last Target:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/tv_last_target_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
         android:layout_below="@+id/tv_last_net_date"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="20dp" />
+        android:layout_marginTop="15dp"
+        android:text="Last Target:" />
     <TextView
-        android:text="Target CurrentP:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/tv_target_current_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
         android:layout_below="@+id/tv_last_target_price"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="20dp" />
+        android:layout_marginTop="15dp"
+        android:text="Target CurrentP:" />
 
     <TextView
-        android:text="Margin:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/tv_margin"
-        android:layout_below="@+id/tv_target_current_time"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="30dp" />
-
-
-    <TextView
-        android:text="Target CurrentT:"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/tv_target_current_time"
-        android:layout_marginTop="20dp"
-        android:layout_below="@+id/tv_target_current_price"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/tv_target_current_time"
+        android:layout_marginTop="25dp"
+        android:text="Margin:" />
+
+    <TextView
+        android:id="@+id/tv_target_current_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/tv_target_current_price"
+        android:layout_marginTop="15dp"
+        android:text="Target CurrentT:" />
 
 
     <EditText
+        android:id="@+id/et_margin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tv_margin"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="130dp"
+        android:width="110dp"
+        android:ems="10"
         android:inputType="textPersonName"
         android:text="Margin"
-        android:ems="10"
-        android:id="@+id/et_margin"
         android:textSize="18sp"
-        android:width="110dp"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="130dp"
-        android:layout_alignBottom="@+id/tv_margin"
         />
 
     <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="date"
-        android:ems="10"
         android:id="@+id/et_target_current_time"
-        android:textSize="10sp"
-        android:text="2017-01-01 00:00"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="130dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/tv_target_current_time"
-        />
-
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="time"
-        android:ems="10"
-        android:id="@+id/et_current_time"
-        android:textSize="10sp"
-        android:text="2017-01-01 00:00:00"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="130dp"
-        android:layout_alignBottom="@+id/tv_current_time"
+        android:ems="10"
+        android:inputType="date"
+        android:text="2017-01-01 00:00"
+        android:textSize="10sp"
         />
 
+
     <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="numberDecimal"
-        android:ems="10"
         android:id="@+id/et_lastday_net"
-        android:textSize="10sp"
-        android:text="0.00"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tv_lastday_net"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="130dp"
-        android:layout_alignBottom="@+id/tv_lastday_net"
+        android:ems="10"
+        android:inputType="numberDecimal"
+        android:text="0.00"
+        android:textSize="10sp"
         />
 
 
     <EditText
+        android:id="@+id/et_current_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="numberDecimal"
-        android:ems="10"
-        android:id="@+id/et_current_price"
-        android:text="0.00"
-        android:textSize="10sp"
+        android:layout_alignBottom="@+id/tv_current_price"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="130dp"
-        android:layout_alignBottom="@+id/tv_current_price"
+        android:ems="10"
+        android:inputType="numberDecimal"
+        android:text="0.00"
+        android:textSize="10sp"
  />
 
-
     <EditText
+        android:id="@+id/et_last_target_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="numberDecimal"
-        android:ems="10"
-        android:id="@+id/et_last_target_price"
-        android:textSize="10sp"
-        android:text="0.00"
+        android:layout_alignBottom="@+id/tv_last_target_price"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="130dp"
-        android:layout_alignBottom="@+id/tv_last_target_price"
+        android:ems="10"
+        android:inputType="numberDecimal"
+        android:text="0.00"
+        android:textSize="10sp"
         />
 
     <EditText
+        android:id="@+id/et_last_net_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="date"
-        android:ems="10"
-        android:id="@+id/et_last_net_date"
-        android:textSize="10sp"
-        android:text="2017-01-01"
+        android:layout_alignBottom="@+id/tv_last_net_date"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="130dp"
-        android:layout_alignBottom="@+id/tv_last_net_date"
+        android:ems="10"
+        android:inputType="date"
+        android:text="2017-01-01"
+        android:textSize="10sp"
         />
 
     <TextView
-        android:text="Current Price:"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/tv_current_price"
-        android:layout_marginTop="20dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="numberDecimal"
-        android:ems="10"
-        android:id="@+id/et_target_current_price"
-        android:textSize="10sp"
-        android:text="0.00"
         android:layout_alignParentLeft="true"
-        android:layout_marginLeft="130dp"
-        android:layout_alignBottom="@+id/tv_target_current_price"
-        />
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="15dp"
+        android:text="Current Price:" />
 
     <Button
-        android:text="LoadT"
+        android:id="@+id/bt_load_target"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/bt_load_target"
-        android:textSize="10sp"
-
+        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true" />
+
+        android:text="LoadT"
+        android:textSize="10sp" />
 
     <ToggleButton
-        android:text="Auto"
+        android:id="@+id/tb_auto"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/tb_auto"
         android:layout_above="@+id/bt_getcurrdata"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:text="Auto"
         android:textOff="AutoOff"
         android:textOn="AutoOn" />
 
     <Button
-        android:text="SaveN"
+        android:id="@+id/bt_savenet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/bt_savenet"
-        android:textSize="10sp"
-        android:layout_toLeftOf="@+id/bt_loadnet"
         android:layout_alignBottom="@+id/tb_auto"
+        android:layout_toLeftOf="@+id/bt_loadnet"
+        android:text="SaveN"
+        android:textSize="10sp"
         />
 
     <Button
-        android:text="SaveT"
+        android:id="@+id/bt_save_target"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/bt_save_target"
-        android:textSize="10sp"
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@+id/bt_load_target"
+        android:text="SaveT"
+        android:textSize="10sp"
         />
 
     <Button
-        android:text="Loadn"
+        android:id="@+id/bt_loadnet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/bt_loadnet"
-        android:textSize="10sp"
         android:layout_alignBottom="@+id/tb_auto"
         android:layout_alignParentRight="true"
+        android:text="Loadn"
+        android:textSize="10sp"
    />
 
     <Button
-        android:text="Calc"
+        android:id="@+id/bt_calc_margin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/bt_calc_margin"
-        android:textSize="12sp"
         android:layout_alignBottom="@+id/tv_margin"
         android:layout_alignParentRight="true"
+        android:text="Calc"
+        android:textSize="12sp"
        />
 
     <SeekBar
+        android:id="@+id/sb_intival_seconds"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/tb_auto"
-        android:layout_marginBottom="14dp"
-        android:id="@+id/sb_intival_seconds"
-        android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentStart="true"
+        android:layout_marginBottom="14dp"
         android:progress="1" />
 
     <Button
-        android:text="Get Now"
+        android:id="@+id/bt_getcurrdata"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/bt_getcurrdata"
-        android:textSize="14sp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:text="Get Now"
+        android:textSize="14sp" />
 
     <TextView
-        android:text="AutoGet Intival:"
+        android:id="@+id/tv_intival_seconds"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:id="@+id/tv_intival_seconds"
         android:layout_above="@+id/sb_intival_seconds"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="10dp"
+        android:text="AutoGet Intival:" />
 
     <TextView
-        android:text="0"
+        android:id="@+id/tv_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/tv_count"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentTop="true"
+        android:text="0" />
 
+    <TextView
+        android:id="@+id/tv_lastday_net"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/tv_current_time"
+        android:layout_marginTop="15dp"
+        android:text="LastDay Net:" />
 
+    <EditText
+        android:id="@+id/et_current_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tv_current_time"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="130dp"
+        android:ems="10"
+        android:inputType="time"
+        android:text="2017-01-01 00:00:00"
+        android:textSize="10sp" />
+
+    <EditText
+        android:id="@+id/et_target_current_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tv_target_current_price"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="130dp"
+        android:ems="10"
+        android:inputType="numberDecimal"
+        android:text="0.00"
+        android:textSize="10sp" />
+
+    <EditText
+        android:id="@+id/et_usdcny_increase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tv_usdcny"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="130dp"
+        android:ems="10"
+        android:inputType="numberDecimal"
+        android:text="0.00%"
+        android:textSize="10sp"
+        android:visibility="invisible" />
+
+    <TextView
+        android:id="@+id/tv_usdcny"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/tv_intival_seconds"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="20dp"
+        android:text="USDCNY Increase:"
+        android:visibility="invisible" />
 </RelativeLayout>

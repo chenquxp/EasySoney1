@@ -54,9 +54,24 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     private EditText mETTargetCurrentTime;
     private EditText mETTargetCurrentPrice;
     private EditText mETMargin;
+    private EditText mETUSDCNYIncrease;
     private ToggleButton mTBAuto;
     private TextView mTVIntivalSeconds;
     private TextView mTVCount;
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle data = intent.getExtras();
+            String exval = data.getString("exvalue");
+            String netval = data.getString("netvalue");
+            String tarval = data.getString("tarvalue");
+            Integer count = data.getInt("timercount");
+            ESData esdata = new ESData(exval, netval, tarval, count);
+            //  LogESData(esdata, "A");
+            UpdateUI(esdata);
+            //  SendESNotify(esdata);
+        }
+    };
     private SeekBar mSBIntivalSeconds;
     private Integer intivalseconds = 60;
     private boolean isBind = false;
@@ -94,6 +109,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         }
     };
 
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -110,7 +126,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 //携带数据
                 String starget = "";
                 String snet = "";
-                SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_WRITEABLE);
+                SharedPreferences read = getSharedPreferences("pxmlfile", MODE_PRIVATE);
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
                 try {
                     Date dt = format.parse(mETLastNetDate.getText().toString());
@@ -192,7 +208,8 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         mETTargetCurrentTime = (EditText) findViewById(R.id.et_target_current_time);
         mETTargetCurrentPrice = (EditText) findViewById(R.id.et_target_current_price);
         mETMargin = (EditText) findViewById(R.id.et_margin);
-        SharedPreferences.Editor editor = getSharedPreferences("pxmlfile", MODE_WORLD_WRITEABLE).edit();
+        mETUSDCNYIncrease = (EditText) findViewById(R.id.et_usdcny_increase);
+        SharedPreferences.Editor editor = getSharedPreferences("pxmlfile", MODE_PRIVATE).edit();
       /*  editor.putString("net2017-01-25", "1.2609");
         editor.putString("target2017-01-25", "23049.12");
         editor.commit();*/
@@ -219,6 +236,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         if (isBind) {
             unbindService(sconn);
         }
+        unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -246,8 +264,8 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         String net = mETLastdayNet.getText().toString().trim();
         String target = mETLastTargetPrice.getText().toString().trim();
         String value = "";
-        SharedPreferences.Editor editor = getSharedPreferences("pxmlfile", MODE_WORLD_WRITEABLE).edit();
-        SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
+        SharedPreferences.Editor editor = getSharedPreferences("pxmlfile", MODE_PRIVATE).edit();
+        SharedPreferences read = getSharedPreferences("pxmlfile", MODE_PRIVATE);
         switch (v.getId()) {
             case R.id.bt_getcurrdata:
                 ClearData();
@@ -268,7 +286,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.bt_loadnet:
                 value = read.getString("net" + date, "");
-                OutputMessage("saved data：" + value);
+                OutputMessage("saved data loaded：" + value);
                 mETLastdayNet.setText(value);
                 break;
             case R.id.bt_save_target:
@@ -278,7 +296,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.bt_load_target:
                 value = read.getString("target" + date, "");
-                OutputMessage("saved data：" + value);
+                OutputMessage("saved data loaded：" + value);
                 mETLastTargetPrice.setText(value);
                 break;
             case R.id.bt_calc_margin:
@@ -469,20 +487,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
-        EasySoneyActivity.this.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle data = intent.getExtras();
-                String exval = data.getString("exvalue");
-                String netval = data.getString("netvalue");
-                String tarval = data.getString("tarvalue");
-                Integer count = data.getInt("timercount");
-                ESData esdata = new ESData(exval, netval, tarval, count);
-                LogESData(esdata, "A");
-                UpdateUI(esdata);
-                SendESNotify(esdata);
-            }
-        }, intentFilter);
+        EasySoneyActivity.this.registerReceiver(mReceiver, intentFilter);
     }
 
     class ESData {
@@ -532,6 +537,10 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
 04 当日最高
 05 当日最低
 06 当前价
+
+var hq_str_USDCNY="22:06:02,6.8742,6.8780,6.8648,136,6.8678,6.8742,6.8606,6.8742,美元人民币,2017-02-15";
+01 当前价，？，03昨收，04波动点数，?,06最高，07最低，?
+
 */
             String[] exsdata = exval.split(",");
             String[] netsdata = netval.split(",");
@@ -547,7 +556,7 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
                 msTargetCurrentTime = tarsdata[17] + " " + tarsdata[18].substring(0, 5);
                 msTargetCurrentPrice = tarsdata[6];
 
-                SharedPreferences read = getSharedPreferences("pxmlfile", MODE_WORLD_READABLE);
+                SharedPreferences read = getSharedPreferences("pxmlfile", MODE_PRIVATE);
                 String value = read.getString("target" + msLastNetDate, "");
                 if (value.compareTo("") == 0) {
                     miLastTargetPriceTextColor = Color.BLUE;

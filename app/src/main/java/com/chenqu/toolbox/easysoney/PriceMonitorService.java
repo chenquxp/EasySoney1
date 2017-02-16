@@ -25,6 +25,14 @@ import com.chenqu.toolbox.easysoney.EasySoneyActivity.ESData;
 
 public class PriceMonitorService extends Service {
     PowerManager.WakeLock mWakeLock;
+    Handler timerhandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            new Thread(networkTask).start();
+        }
+    };
     /**
      * Return the communication channel to the service.  May return null if
      * clients can not bind to the service.  The returned
@@ -60,10 +68,10 @@ public class PriceMonitorService extends Service {
             String exvalue = GetHttpText(exurl);
             String netvalue = GetHttpText(neturl);
             String tarvalue = GetHttpText(tarurl);
-            //ESData d=mESActivity.new ESData(exvalue,netvalue,tarvalue,timercount);
-            //mESActivity.LogESData(d,"S");
-            // mESActivity.SendESNotify(d);
-            TestWriteFile("records.txt", "ServiceWriteTest\n");
+            ESData d = mESActivity.new ESData(exvalue, netvalue, tarvalue, timercount);
+            mESActivity.LogESData(d, "S");
+            mESActivity.SendESNotify(d);
+            // TestWriteFile("records.txt", "ServiceWriteTest\n");
 
             intent.putExtra("exvalue", exvalue);
             intent.putExtra("netvalue", netvalue);
@@ -72,14 +80,6 @@ public class PriceMonitorService extends Service {
             intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
             sendBroadcast(intent);
 
-        }
-    };
-    Handler timerhandler = new Handler() {
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            new Thread(networkTask).start();
         }
     };
 
