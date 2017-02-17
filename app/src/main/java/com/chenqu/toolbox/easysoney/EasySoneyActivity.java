@@ -16,7 +16,6 @@ import java.text.*;
 
 import com.chenqu.toolbox.easysoney.PriceMonitorService.*;
 
-
 public class EasySoneyActivity extends AppCompatActivity implements View.OnClickListener {
     DialogInterface.OnClickListener exitdialoglistener = new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
@@ -109,7 +108,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
         }
     };
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -258,7 +256,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
     }
 
-
     @Override
     public void onClick(View v) {
         String date = mETLastNetDate.getText().toString().trim();
@@ -316,7 +313,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                     //     mIntentService.putExtra("once", false);
                     //    mIntentService.putExtra("stop", false);
                     //bindService....
-
                 } else {
                     mSBIntivalSeconds.setEnabled(true);
                     if (isBind) {
@@ -353,7 +349,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 .setSmallIcon(R.drawable.ic_stat_name);
     }
 
-
     public Double CalcMarginPercent(String slastnet, String slasttarget, String scurrtarget, String scurrprice) {
         Double lasttarget;
         Double lastnet;
@@ -365,7 +360,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             lasttarget = Double.parseDouble(slasttarget);
             currtarget = Double.parseDouble(scurrtarget);
             currprice = Double.parseDouble(scurrprice);
-
             margin = (currtarget / lasttarget - currprice / lastnet - 0.0053) * 100;
         } catch (Exception e) {
             e.printStackTrace();
@@ -416,7 +410,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         mNotificationManager.cancelAll();
     }
 
-
     public void showIntentActivityNotify(String stitle, String stext, String sticker) {
         mBuilder.setAutoCancel(true)
                 .setContentTitle(stitle)
@@ -428,7 +421,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         mBuilder.setContentIntent(pendingIntent);
         mNotificationManager.notify(notifyId, mBuilder.build());
     }
-
 
     public String ReadFile(String filename) {
         try {
@@ -463,7 +455,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     }
 
     public void SendESNotify(ESData d) {
-        if (d.mDMarginPercent > 0) {
+        if (d.mDMarginPercent > 0 && d.mDMarginPercent < 90) {
             String smargin = (d.mDMarginPercent.toString().substring(0, 5) + "%");
             showIntentActivityNotify("Lucky time.", "Margin=" + smargin + " @" + d.msCurrentTime, "Margin=" + smargin + " @" + d.msCurrentTime);
         }
@@ -554,7 +546,6 @@ var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,2
 var hq_str_USDCNY="22:06:02,6.8742,6.8780,6.8648,136,6.8678,6.8742,6.8606,6.8742,美元人民币,2017-02-15";
 var hq_str_USDCNY="15:38:03,6.8604,6.8654,6.8684,137,6.8686,6.8686,6.8549,6.8604,美元人民币,2017-02-16";
 
-
 01 当前价，？，03今开，04波动点数，05昨收,06最高，07最低，?
 
 */
@@ -596,11 +587,9 @@ var hq_str_USDCNY="15:38:03,6.8604,6.8654,6.8684,137,6.8686,6.8686,6.8549,6.8604
                 mDMarginPercent = CalcMarginPercent(msLastdayNet, msLastTargetPrice,
                         msTargetCurrentPrice, msCurrentPrice);
                 errmsg += ("Data Refreshed\n");
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
-
 }
