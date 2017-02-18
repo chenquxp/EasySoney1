@@ -5,13 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
-import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -31,7 +29,6 @@ public class PriceMonitorService extends Service {
     PowerManager.WakeLock mWakeLock;
     private EasySoneyActivity mESActivity;
     private Timer timer;
-    private Timer autoonofftimer;
     private String exurl = "http://hq.sinajs.cn/list=sz159920";
     private String neturl = "http://hq.sinajs.cn/list=f_159920";
     private String tarurl = "http://hq.sinajs.cn/list=hkHSI";
@@ -166,6 +163,7 @@ public class PriceMonitorService extends Service {
         }
         return true;
     }
+
     public void setMainActivity(EasySoneyActivity activity) {
         this.mESActivity = activity;
     }
@@ -369,6 +367,23 @@ public class PriceMonitorService extends Service {
         return margin;
     }
 
+    public Double PredictNewNet(String slastnet, String slasttarget, String scurrtarget, String sfeincrease) {
+        Double lasttarget;
+        Double lastnet;
+        Double currtarget;
+        Double feincrease;
+        Double newnet = 0.0;
+        try {
+            lastnet = Double.parseDouble(slastnet);
+            lasttarget = Double.parseDouble(slasttarget);
+            currtarget = Double.parseDouble(scurrtarget);
+            feincrease = Double.parseDouble(sfeincrease.replace("%", ""));
+            newnet = lastnet * (currtarget / lasttarget) * (1 + feincrease / 100);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return newnet;
+    }
     class MyBinder extends Binder {
         public PriceMonitorService getMyService() {
             return PriceMonitorService.this;

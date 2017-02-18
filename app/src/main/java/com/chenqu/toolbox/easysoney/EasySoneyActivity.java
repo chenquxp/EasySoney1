@@ -18,7 +18,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     private Intent mIntentService;
     private Button mBGetCurrentData;
     private Button mBSave;
-    private Button mBLoad;
+    private Button mBPredict;
     private Button mBSaveTarget;
     private Button mBLoadTarget;
     private Button mBCalcMargin;
@@ -38,7 +38,6 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     private Integer intivalseconds = 60;
     private SharedPreferences read;
     private SharedPreferences.Editor editor;
-    private ESData mESdata;
     private boolean isBind = false;
     private PriceMonitorService mPriceMonitorService;
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -108,8 +107,8 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         mBGetCurrentData.setOnClickListener(this);
         mBSave = (Button) findViewById(R.id.bt_savenet);
         mBSave.setOnClickListener(this);
-        mBLoad = (Button) findViewById(R.id.bt_loadnet);
-        mBLoad.setOnClickListener(this);
+        mBPredict = (Button) findViewById(R.id.bt_predict);
+        mBPredict.setOnClickListener(this);
         mBLoadTarget = (Button) findViewById(R.id.bt_load_target);
         mBLoadTarget.setOnClickListener(this);
         mBSaveTarget = (Button) findViewById(R.id.bt_save_target);
@@ -197,13 +196,15 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                     String t;
                     t = format.format(dt);
                     starget += "target" + t + ":" + read.getString("target" + t, "") + "\n";
+                    snet += "predict" + t + "+1:" + read.getString("predict" + t + "+1", "") + "\n";
                     snet += "net" + t + ":" + read.getString("net" + t, "") + "\n";
 
-                    for (int i = 10; i >= 0; i--) {
+                    for (int i = 8; i >= 0; i--) {
                         calendar.add(Calendar.DATE, -1);
                         dt = calendar.getTime();
                         t = format.format(dt);
                         starget += "target" + t + ":" + read.getString("target" + t, "") + "\n";
+                        snet += "predict" + t + "+1:" + read.getString("predict" + t + "+1", "") + "\n";
                         snet += "net" + t + ":" + read.getString("net" + t, "") + "\n";
                     }
                     bundle.putString("text", starget + "\n" + snet);
@@ -276,10 +277,17 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 editor.commit();
                 OutputMessage("save complete net" + date + " " + net);
                 break;
-            case R.id.bt_loadnet:
-                value = read.getString("net" + date, "");
-                OutputMessage("saved data loaded：" + value);
-                mETLastdayNet.setText(value);
+            case R.id.bt_predict:
+                SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
+                String retStrFormatNowDate = sdFormatter.format(cal.getTime());
+                Double dnewnet = mPriceMonitorService.PredictNewNet(mETLastdayNet.getText().toString(), mETLastTargetPrice.getText().toString(),
+                        mETTargetCurrentPrice.getText().toString(), mETUSDCNYIncrease.getText().toString());
+                int len = dnewnet.toString().length();
+                if (len > 6) len = 6;
+                editor.putString("predict" + date + "+1", dnewnet.toString().substring(0, len) + " (" + retStrFormatNowDate + ")");
+                editor.commit();
+                OutputMessage("save predict net" + date + "+1:" + dnewnet.toString().substring(0, len));
                 break;
             case R.id.bt_save_target:
                 editor.putString("target" + date, target);
@@ -287,9 +295,9 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 OutputMessage("save complete target" + date + " " + target);
                 break;
             case R.id.bt_load_target:
-                value = read.getString("target" + date, "");
-                OutputMessage("saved data loaded：" + value);
-                mETLastTargetPrice.setText(value);
+                // value = read.getString("target" + date, "");
+                // OutputMessage("saved data loaded：" + value);
+                // mETLastTargetPrice.setText(value);
                 break;
             case R.id.bt_calc_margin:
                 Double dmargin = mPriceMonitorService.CalcMarginPercent(mETLastdayNet.getText().toString(), mETLastTargetPrice.getText().toString(),

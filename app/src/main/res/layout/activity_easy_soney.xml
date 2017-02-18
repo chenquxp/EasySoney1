@@ -168,7 +168,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
 
-        android:text="LoadT"
+        android:text="..."
         android:textSize="10sp" />
 
     <ToggleButton
@@ -187,7 +187,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/tb_auto"
-        android:layout_toLeftOf="@+id/bt_loadnet"
+        android:layout_toLeftOf="@+id/bt_predict"
         android:text="SaveN"
         android:textSize="10sp"
         />
@@ -203,12 +203,12 @@
         />
 
     <Button
-        android:id="@+id/bt_loadnet"
+        android:id="@+id/bt_predict"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/tb_auto"
         android:layout_alignParentRight="true"
-        android:text="Loadn"
+        android:text="predict"
         android:textSize="10sp"
    />
 
