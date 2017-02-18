@@ -364,13 +364,10 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             }
         } catch (Exception e) {
             e.printStackTrace();
-
         }
-
     }
 
     private void registerReceiver() {
-
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
         EasySoneyActivity.this.registerReceiver(mReceiver, intentFilter);

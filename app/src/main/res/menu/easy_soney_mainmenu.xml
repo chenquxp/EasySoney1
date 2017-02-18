@@ -17,5 +17,5 @@
         android:title="Auto Weekend" />
     <item
         android:id="@+id/exit_item"
-        android:title="Exit" />
+        android:title="Exit(ver2.5)" />
 </menu>
