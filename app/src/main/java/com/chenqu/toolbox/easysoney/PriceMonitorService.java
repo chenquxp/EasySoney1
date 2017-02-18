@@ -3,21 +3,25 @@ package com.chenqu.toolbox.easysoney;
 import android.app.*;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
+import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.chenqu.toolbox.easysoney.EasySoneyActivity.ESData;
+import com.chenqu.toolbox.easysoney.EasySoneyActivity;
 
 /**
  * Created by chenqu on 2017/2/9.
@@ -25,66 +29,73 @@ import com.chenqu.toolbox.easysoney.EasySoneyActivity.ESData;
 
 public class PriceMonitorService extends Service {
     PowerManager.WakeLock mWakeLock;
-    /**
-     * Return the communication channel to the service.  May return null if
-     * clients can not bind to the service.  The returned
-     * {@link IBinder} is usually for a complex interface
-     * that has been <a href="{@docRoot}guide/components/aidl.html">described using
-     * aidl</a>.
-     * <p>
-     * <p><em>Note that unlike other application components, calls on to the
-     * IBinder interface returned here may not happen on the main thread
-     * of the process</em>.  More information about the main thread can be found in
-     * <a href="{@docRoot}guide/topics/fundamentals/processes-and-threads.html">Processes and
-     * Threads</a>.</p>
-     *
-     * @param intent The Intent that was used to bind to this service,
-     * as given to {@link Context#bindService
-     * Context.bindService}.  Note that any extras that were included with
-     * the Intent at that point will <em>not</em> be seen here.
-     * @return Return an IBinder through which clients can call on to the
-     * service.
-     */
     private EasySoneyActivity mESActivity;
     private Timer timer;
-    private boolean once;
+    private Timer autoonofftimer;
     private String exurl = "http://hq.sinajs.cn/list=sz159920";
     private String neturl = "http://hq.sinajs.cn/list=f_159920";
     private String tarurl = "http://hq.sinajs.cn/list=hkHSI";
     private String feurl = "http://hq.sinajs.cn/list=USDCNY";
     private int timercount = 0;
+    private int notifyId = 100;
+    private NotificationCompat.Builder mBuilder;
+    private NotificationManager mNotificationManager;
     Runnable networkTask = new Runnable() {
         @Override
         public void run() {
-            timercount++;
-            Intent intent = new Intent();
-            String exvalue = GetHttpText(exurl);
-            String netvalue = GetHttpText(neturl);
-            String tarvalue = GetHttpText(tarurl);
-            String fevalue = GetHttpText(feurl);
-            ESData d = mESActivity.new ESData(exvalue, netvalue, tarvalue, fevalue, timercount);
-            mESActivity.LogESData(d, "S");
-            mESActivity.SendESNotify(d);
-            // TestWriteFile("records.txt", "ServiceWriteTest\n");
+            try {
+                timercount++;
+                Intent intent = new Intent();
+                String exvalue = GetHttpText(exurl);
+                String netvalue = GetHttpText(neturl);
+                String tarvalue = GetHttpText(tarurl);
+                String fevalue = GetHttpText(feurl);
+                ESData d = new ESData(exvalue, netvalue, tarvalue, fevalue, timercount);
+                LogESData(d, "S");
+                SendESNotify(d);
+                // mESActivity.
 
-            intent.putExtra("exvalue", exvalue);
-            intent.putExtra("netvalue", netvalue);
-            intent.putExtra("tarvalue", tarvalue);
-            intent.putExtra("fevalue", fevalue);
-            intent.putExtra("timercount", timercount);
-            intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
-            sendBroadcast(intent);
-
+                intent.putExtra("exvalue", exvalue);
+                intent.putExtra("netvalue", netvalue);
+                intent.putExtra("tarvalue", tarvalue);
+                intent.putExtra("fevalue", fevalue);
+                intent.putExtra("timercount", timercount);
+                intent.setAction("com.chenqu.toolbox.easysoney.PriceMonitorService");
+                sendBroadcast(intent);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     };
+    private SharedPreferences read;
     Handler timerhandler = new Handler() {
-
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            new Thread(networkTask).start();
+            if (msg.what == 0) {
+                new Thread(networkTask).start();
+            } else if (msg.what == 1) {
+                if (read.getBoolean("isautoonoff", false)) {
+                    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
+                    if (!(IsBussinessTime(cal))) {
+                        return;
+                    }
+                }
+                new Thread(networkTask).start();
+            }
         }
     };
+    private SharedPreferences.Editor editor;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        //  acquireWakeLock();
+        read = getSharedPreferences("pxmlfile", MODE_PRIVATE);
+        editor = read.edit();
+        initNotify();
+        useForeground("EasySoney", "Foreground Quick Access");
+    }
 
     //申请设备电源锁
     private void acquireWakeLock() {
@@ -105,56 +116,10 @@ public class PriceMonitorService extends Service {
         }
     }
 
-    /**
-     * Called by the system every time a client explicitly starts the service by calling
-     * {@link Context#startService}, providing the arguments it supplied and a
-     * unique integer token representing the start request.  Do not call this method directly.
-     * <p>
-     * <p>For backwards compatibility, the default implementation calls
-     * {@link #onStart} and returns either {@link #START_STICKY}
-     * or {@link #START_STICKY_COMPATIBILITY}.
-     * <p>
-     * <p>If you need your application to run on platform versions prior to API
-     * level 5, you can use the following model to handle the older {@link #onStart}
-     * callback in that case.  The <code>handleCommand</code> method is implemented by
-     * you as appropriate:
-     * <p>
-     * {@sample development/samples/ApiDemos/src/com/example/android/apis/app/ForegroundService.java
-     * start_compatibility}
-     * <p>
-     * <p class="caution">Note that the system calls this on your
-     * service's main thread.  A service's main thread is the same
-     * thread where UI operations take place for Activities running in the
-     * same process.  You should always avoid stalling the main
-     * thread's event loop.  When doing long-running operations,
-     * network calls, or heavy disk I/O, you should kick off a new
-     * thread, or use {@link AsyncTask}.</p>
-     *
-     * @param intent  The Intent supplied to {@link Context#startService},
-     *                as given.  This may be null if the service is being restarted after
-     *                its process has gone away, and it had previously returned anything
-     *                except {@link #START_STICKY_COMPATIBILITY}.
-     * @param flags   Additional data about this start request.  Currently either
-     *                0, {@link #START_FLAG_REDELIVERY}, or {@link #START_FLAG_RETRY}.
-     * @param startId A unique integer representing this specific request to
-     *                start.  Use with {@link #stopSelfResult(int)}.
-     * @return The return value indicates what semantics the system should
-     * use for the service's current started state.  It may be one of the
-     * constants associated with the {@link #START_CONTINUATION_MASK} bits.
-     * @see #stopSelfResult(int)
-     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         return super.onStartCommand(intent, flags, startId);
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        //  acquireWakeLock();
-        useForeground("EasySoney", "Foreground Quick Access");
-
     }
 
     public void useForeground(CharSequence tickerText, String contentText) {
@@ -189,6 +154,18 @@ public class PriceMonitorService extends Service {
         return new MyBinder();
     }
 
+    public boolean IsBussinessTime(Calendar c) {
+
+        SimpleDateFormat sdFormatter = new SimpleDateFormat("HH:mm:ss");
+        String sNowTime = sdFormatter.format(c.getTime());
+        if (!(sNowTime.compareTo("09:30:00") >= 0 && sNowTime.compareTo("11:30:00") <= 0 || sNowTime.compareTo("13:00:00") >= 0 && sNowTime.compareTo("15:00:00") <= 0)) {
+            return false;
+        }
+        if (c.get(Calendar.DAY_OF_WEEK) < 2 || c.get(Calendar.DAY_OF_WEEK) > 6) {
+            return false;
+        }
+        return true;
+    }
     public void setMainActivity(EasySoneyActivity activity) {
         this.mESActivity = activity;
     }
@@ -218,7 +195,7 @@ public class PriceMonitorService extends Service {
                 @Override
                 public void run() {
                     Message msg = new Message();
-                    msg.what = 0;
+                    msg.what = 1;
                     timerhandler.sendMessage(msg);
                 }
             }, i * 1000, i * 1000);
@@ -271,13 +248,29 @@ public class PriceMonitorService extends Service {
         return bo.toString();
     }
 
-    public void TestWriteFile(String filename, String msg) {
+    public String ReadFile(String filename) {
+        try {
+            FileInputStream inStream = this.openFileInput(filename);
+            byte[] buffer = new byte[1024];
+            int hasRead = 0;
+            StringBuilder sb = new StringBuilder();
+            while ((hasRead = inStream.read(buffer)) != -1) {
+                sb.append(new String(buffer, 0, hasRead));
+            }
+            inStream.close();
+            return sb.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void WriteFile(String filename, String msg) {
         // 步骤1：获取输入值
         if (msg == null) return;
         try {
             // 步骤2:创建一个FileOutputStream对象,MODE_APPEND追加模式.重写用PRIVATE
-            FileOutputStream fos = openFileOutput(filename,
-                    MODE_APPEND);
+            FileOutputStream fos = openFileOutput(filename, MODE_APPEND);
             // 步骤3：将获取过来的值放入文件
             fos.write(msg.getBytes());
             // 步骤4：关闭数据流
@@ -287,9 +280,213 @@ public class PriceMonitorService extends Service {
         }
     }
 
+    public void LogESData(ESData d, String flag) {
+        try {
+            SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
+            String retStrFormatNowDate = sdFormatter.format(cal.getTime());
+            String srecord = flag + ",";
+            srecord += d.msCount + ",";
+            srecord += retStrFormatNowDate + ",";
+            srecord += d.msCurrentPrice + ",";
+            srecord += d.msCurrentTime + ",";
+            srecord += d.msLastdayNet + ",";
+            srecord += d.msLastNetDate + ",";
+            srecord += d.msLastTargetPrice + ",";
+            srecord += d.msTargetCurrentTime + ",";
+            srecord += d.msTargetCurrentPrice + ",";
+            srecord += d.mDForeignExchangeIncreasePercent.toString().substring(0, 5) + "%,";
+            srecord += d.mDMarginPercent.toString().substring(0, 5) + "%" + "\n" + d.errmsg;
+            WriteFile("records.txt", srecord);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void initNotify() {
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mBuilder = new NotificationCompat.Builder(this);
+        mBuilder.setContentTitle("iniNotify ContentTitle")
+                .setContentText("iniNotify Contenttext")
+                .setContentIntent(getDefalutIntent(Notification.FLAG_AUTO_CANCEL))
+                .setTicker("iniNotify Ticker")
+                .setWhen(System.currentTimeMillis())
+                .setPriority(Notification.PRIORITY_DEFAULT)
+                .setOngoing(false)
+                .setDefaults(Notification.DEFAULT_VIBRATE)
+                .setSmallIcon(R.drawable.ic_stat_name);
+    }
+
+
+    public PendingIntent getDefalutIntent(int flags) {
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, new Intent(), flags);
+        return pendingIntent;
+    }
+
+    public void clearNotify(int notifyId) {
+        mNotificationManager.cancel(notifyId);
+    }
+
+
+    public void clearAllNotify() {
+        mNotificationManager.cancelAll();
+    }
+
+    public void showIntentActivityNotify(String stitle, String stext, String sticker) {
+        mBuilder.setAutoCancel(true)
+                .setContentTitle(stitle)
+                .setContentText(stext)
+                .setTicker(sticker);
+        Intent resultIntent = new Intent(this, EasySoneyActivity.class);
+        resultIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        mBuilder.setContentIntent(pendingIntent);
+        mNotificationManager.notify(notifyId, mBuilder.build());
+    }
+
+    public void SendESNotify(ESData d) {
+        if (d.mDMarginPercent > 0 && d.mDMarginPercent < 90) {
+            String smargin = (d.mDMarginPercent.toString().substring(0, 5) + "%");
+            showIntentActivityNotify("Lucky time.", "Margin=" + smargin + " @" + d.msCurrentTime, "Margin=" + smargin + " @" + d.msCurrentTime);
+        }
+    }
+
+    public Double CalcMarginPercent(String slastnet, String slasttarget, String scurrtarget, String scurrprice) {
+        Double lasttarget;
+        Double lastnet;
+        Double currtarget;
+        Double currprice;
+        Double margin = 0.0;
+        try {
+            lastnet = Double.parseDouble(slastnet);
+            lasttarget = Double.parseDouble(slasttarget);
+            currtarget = Double.parseDouble(scurrtarget);
+            currprice = Double.parseDouble(scurrprice);
+            margin = (currtarget / lasttarget - currprice / lastnet - 0.0053) * 100;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return margin;
+    }
+
     class MyBinder extends Binder {
         public PriceMonitorService getMyService() {
             return PriceMonitorService.this;
         }
+    }
+
+    class ESData {
+        public String msCount;
+        public String msCurrentPrice;
+        public String msCurrentTime;
+        public String msLastdayNet;
+        public String msLastNetDate;
+        public String msLastTargetPrice;
+        public String msTargetCurrentTime;
+        public String msTargetCurrentPrice;
+        public Double mDMarginPercent;
+        public Double mDForeignExchangeIncreasePercent;
+        public int miLastTargetPriceTextColor;
+        public int miLastdayNetTextColor;
+        public String errmsg = "";
+
+        ESData(String exval, String netval, String tarval, String feval, Integer count) {
+            /*0：”大秦铁路”，股票名字；
+1：”27.55″，今日开盘价；
+2：”27.25″，昨日收盘价；
+3：”26.91″，当前价格；
+4：”27.55″，今日最高价；
+5：”26.20″，今日最低价；
+6：”26.91″，竞买价，即“买一”报价；
+7：”26.92″，竞卖价，即“卖一”报价；
+8：”22114263″，成交的股票数，由于股票交易以一百股为基本单位，所以在使用时，通常把该值除以一百；
+9：”589824680″，成交金额，单位为“元”，为了一目了然，通常以“万元”为成交金额的单位，所以通常把该值除以一万；
+10：”4695″，“买一”申请4695股，即47手；
+11：”26.91″，“买一”报价；
+12：”57590″，“买二”
+13：”26.90″，“买二”
+14：”14700″，“买三”
+15：”26.89″，“买三”
+16：”14300″，“买四”
+17：”26.88″，“买四”
+18：”15100″，“买五”
+19：”26.87″，“买五”
+20：”3100″，“卖一”申报3100股，即31手；
+21：”26.92″，“卖一”报价
+(22, 23), (24, 25), (26,27), (28, 29)分别为“卖二”至“卖四的情况”
+30：”2008-01-11″，日期；
+31：”15:05:32″，时间；
+var hq_str_f_159920="恒生ETF(QDII),1.2784,1.2784,1.2609,2017-01-26,13.5156";
+var hq_str_hkHSI="Hang Seng Main Index,恒生指数,23339.15,23374.17,23397.09,23307.05,23360.78,-13.39,-0.06,,,29584699,0,0.000,0.00,24364.00,18278.80,2017/01/27,12:09";
+02 当日开盘
+03 上日收盘
+04 当日最高
+05 当日最低
+06 当前价
+
+var hq_str_USDCNY="22:06:02,6.8742,6.8780,6.8648,136,6.8678,6.8742,6.8606,6.8742,美元人民币,2017-02-15";
+var hq_str_USDCNY="15:38:03,6.8604,6.8654,6.8684,137,6.8686,6.8686,6.8549,6.8604,美元人民币,2017-02-16";
+01 当前价，？，03今开，04波动点数，05昨收,06最高，07最低，?
+*/
+            String[] exsdata = exval.split(",");
+            String[] netsdata = netval.split(",");
+            String[] tarsdata = tarval.split(",");
+            String[] fesdata = feval.split(",");
+            // UI界面的更新等相关操作
+            try {
+                msCount = count.toString();
+                msCurrentPrice = exsdata[7];
+                msCurrentTime = exsdata[30] + " " + exsdata[31];
+                msLastdayNet = netsdata[1];
+                msLastNetDate = netsdata[4];
+                msLastTargetPrice = tarsdata[3];
+                msTargetCurrentTime = tarsdata[17].replace("/", "-") + " " + tarsdata[18].substring(0, 5);
+                msTargetCurrentPrice = tarsdata[6];
+                mDForeignExchangeIncreasePercent = (Double.parseDouble(fesdata[1]) / Double.parseDouble(fesdata[5]) - 1) * 100;
+                String value = read.getString("target" + msLastNetDate, "");
+                if (value.compareTo("") == 0) {
+                    miLastTargetPriceTextColor = Color.BLUE;
+                    errmsg += msLastNetDate + "Last Target Not Save err：" + "Null!=" + msLastTargetPrice + "\n";
+                    if (read.getBoolean("isautosave", false)) {
+                        if (msTargetCurrentTime.substring(0, 10).compareTo(msLastNetDate) == 0 && msTargetCurrentTime.substring(11, 16).compareTo("16:00") > 0) {
+                            editor.putString("target" + msLastNetDate, msTargetCurrentPrice);
+                            errmsg += msLastNetDate + "Last Target Auto Saved\n";
+                        } else if (msTargetCurrentTime.substring(0, 10).compareTo(msLastNetDate) > 0) {
+                            editor.putString("target" + msLastNetDate, msLastTargetPrice);
+                            errmsg += msLastNetDate + "Last Target Auto Saved\n";
+                        } else {
+                            errmsg += msLastNetDate + "Last Target Attempt Auto Save Fail\n";
+                        }
+                    }
+                } else if (value.compareTo(msLastTargetPrice) != 0) {
+                    errmsg += (msLastNetDate + "Target Data err：" + value + "!=" + msLastTargetPrice + "\n");
+                    msLastTargetPrice = value;
+                    miLastTargetPriceTextColor = Color.RED;
+                } else {
+                    miLastTargetPriceTextColor = Color.BLACK;
+                }
+                value = read.getString("net" + msLastNetDate, "");
+                if (value.compareTo("") == 0) {
+                    miLastdayNetTextColor = Color.BLUE;
+                    errmsg += msLastNetDate + "Last Net Not Save err：" + "Null!=" + msLastdayNet + "\n";
+                    if (read.getBoolean("isautosave", false)) {
+                        editor.putString("net" + msLastNetDate, msLastdayNet);
+                        errmsg += msLastNetDate + "Last Net Auto Saved\n";
+                    }
+                } else if (value.compareTo(msLastdayNet) != 0) {
+                    errmsg += (msLastNetDate + "Net Data err：" + value + "!=" + msLastdayNet + "\n");
+                    miLastdayNetTextColor = Color.GREEN;
+                } else {
+                    miLastdayNetTextColor = Color.BLACK;
+                }
+                editor.commit();
+                mDMarginPercent = CalcMarginPercent(msLastdayNet, msLastTargetPrice,
+                        msTargetCurrentPrice, msCurrentPrice);
+                errmsg += ("Data Refreshed\n");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 }
