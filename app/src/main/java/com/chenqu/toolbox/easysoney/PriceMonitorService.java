@@ -72,7 +72,7 @@ public class PriceMonitorService extends Service {
             if (msg.what == 0) {
                 new Thread(networkTask).start();
             } else if (msg.what == 1) {
-                if (read.getBoolean("isautoonoff", false)) {
+                if (read.getBoolean("isautoweekend", false)) {
                     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
                     if (!(IsBussinessTime(cal))) {
                         return;
@@ -288,7 +288,7 @@ public class PriceMonitorService extends Service {
             srecord += retStrFormatNowDate + ",";
             srecord += d.msCurrentPrice + ",";
             srecord += d.msCurrentTime + ",";
-            srecord += d.msLastdayNet + ",";
+            srecord += d.msLastNet + ",";
             srecord += d.msLastNetDate + ",";
             srecord += d.msLastTargetPrice + ",";
             srecord += d.msTargetCurrentTime + ",";
@@ -394,7 +394,7 @@ public class PriceMonitorService extends Service {
         public String msCount;
         public String msCurrentPrice;
         public String msCurrentTime;
-        public String msLastdayNet;
+        public String msLastNet;
         public String msLastNetDate;
         public String msLastTargetPrice;
         public String msTargetCurrentTime;
@@ -452,7 +452,7 @@ var hq_str_USDCNY="15:38:03,6.8604,6.8654,6.8684,137,6.8686,6.8686,6.8549,6.8604
                 msCount = count.toString();
                 msCurrentPrice = exsdata[7];
                 msCurrentTime = exsdata[30] + " " + exsdata[31];
-                msLastdayNet = netsdata[1];
+                msLastNet = netsdata[1];
                 msLastNetDate = netsdata[4];
                 msLastTargetPrice = tarsdata[3];
                 msTargetCurrentTime = tarsdata[17].replace("/", "-") + " " + tarsdata[18].substring(0, 5);
@@ -483,19 +483,19 @@ var hq_str_USDCNY="15:38:03,6.8604,6.8654,6.8684,137,6.8686,6.8686,6.8549,6.8604
                 value = read.getString("net" + msLastNetDate, "");
                 if (value.compareTo("") == 0) {
                     miLastdayNetTextColor = Color.BLUE;
-                    errmsg += msLastNetDate + "Last Net Not Save err：" + "Null!=" + msLastdayNet + "\n";
+                    errmsg += msLastNetDate + "Last Net Not Save err：" + "Null!=" + msLastNet + "\n";
                     if (read.getBoolean("isautosave", false)) {
-                        editor.putString("net" + msLastNetDate, msLastdayNet);
+                        editor.putString("net" + msLastNetDate, msLastNet);
                         errmsg += msLastNetDate + "Last Net Auto Saved\n";
                     }
-                } else if (value.compareTo(msLastdayNet) != 0) {
-                    errmsg += (msLastNetDate + "Net Data err：" + value + "!=" + msLastdayNet + "\n");
+                } else if (value.compareTo(msLastNet) != 0) {
+                    errmsg += (msLastNetDate + "Net Data err：" + value + "!=" + msLastNet + "\n");
                     miLastdayNetTextColor = Color.GREEN;
                 } else {
                     miLastdayNetTextColor = Color.BLACK;
                 }
                 editor.commit();
-                mDMarginPercent = CalcMarginPercent(msLastdayNet, msLastTargetPrice,
+                mDMarginPercent = CalcMarginPercent(msLastNet, msLastTargetPrice,
                         msTargetCurrentPrice, msCurrentPrice);
                 errmsg += ("Data Refreshed\n");
             } catch (Exception e) {

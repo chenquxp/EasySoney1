@@ -2,15 +2,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".EasySoneyActivity">
     <item
+        android:id="@+id/show_recent_data_item"
+        android:title="Show Recent Data..." />
+    <item
+        android:id="@+id/show_records_item"
+        android:title="Show Records..." />
+    <item
         android:id="@+id/autosave_item"
         android:checkable="true"
-        android:title="Auto Save" />
+        android:title="Auto Save Net/Target" />
     <item
-        android:id="@+id/autoonoff_item"
+        android:id="@+id/autoweekend_item"
         android:checkable="true"
-        android:title="Auto On/Off" />
-    <item android:id="@+id/show_recent_data_item" android:title="Show Recent Data..." />
-    <item android:id="@+id/show_records_item" android:title="Show Records..." />
+        android:title="Auto Weekend" />
     <item
         android:id="@+id/exit_item"
         android:title="Exit" />

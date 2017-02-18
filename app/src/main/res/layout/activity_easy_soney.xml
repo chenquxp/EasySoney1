@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/tv_lastday_net"
+        android:layout_below="@+id/tv_last_net"
         android:layout_marginTop="15dp"
         android:text="Last Net Date:" />
     <TextView
@@ -102,7 +102,7 @@
         android:id="@+id/et_lastday_net"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/tv_lastday_net"
+        android:layout_alignBottom="@+id/tv_last_net"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="130dp"
         android:ems="10"
@@ -179,8 +179,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:text="Auto"
-        android:textOff="AutoOff"
-        android:textOn="AutoOn" />
+        android:textOff="TimerOff"
+        android:textOn="TimerOn" />
 
     <Button
         android:id="@+id/bt_savenet"
@@ -264,14 +264,14 @@
         android:text="0" />
 
     <TextView
-        android:id="@+id/tv_lastday_net"
+        android:id="@+id/tv_last_net"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/tv_current_time"
         android:layout_marginTop="15dp"
-        android:text="LastDay Net:" />
+        android:text="Last Net:" />
 
     <EditText
         android:id="@+id/et_current_time"

@@ -24,7 +24,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     private Button mBCalcMargin;
     private EditText mETCurrentPrice;
     private EditText mETCurrentTime;
-    private EditText mETLastdayNet;
+    private EditText mETLastNet;
     private EditText mETLastNetDate;
     private EditText mETLastTargetPrice;
     private EditText mETTargetCurrentTime;
@@ -92,7 +92,12 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            intivalseconds = 10 + 30 * progress;
+            if (progress == 100) {
+                intivalseconds = 3600;
+            } else {
+                intivalseconds = 30 + 30 * progress;
+            }
+
             mTVIntivalSeconds.setText("AutoGet Intival:" + intivalseconds.toString() + "Seconds");
 
         }
@@ -126,7 +131,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
 
         mETCurrentPrice = (EditText) findViewById(R.id.et_current_price);
         mETCurrentTime = (EditText) findViewById(R.id.et_current_time);
-        mETLastdayNet = (EditText) findViewById(R.id.et_lastday_net);
+        mETLastNet = (EditText) findViewById(R.id.et_lastday_net);
         mETLastNetDate = (EditText) findViewById(R.id.et_last_net_date);
         mETLastTargetPrice = (EditText) findViewById(R.id.et_last_target_price);
         mETTargetCurrentTime = (EditText) findViewById(R.id.et_target_current_time);
@@ -165,7 +170,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.easy_soney_mainmenu, menu);
         menu.findItem(R.id.autosave_item).setChecked(read.getBoolean("isautosave", false));
-        menu.findItem(R.id.autoonoff_item).setChecked(read.getBoolean("isautoonoff", false));
+        menu.findItem(R.id.autoweekend_item).setChecked(read.getBoolean("isautoweekend", false));
         return true;
     }
 
@@ -179,9 +184,9 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 editor.putBoolean("isautosave", item.isChecked());
                 editor.commit();
                 break;
-            case R.id.autoonoff_item:
+            case R.id.autoweekend_item:
                 item.setChecked(!item.isChecked());
-                editor.putBoolean("isautoonoff", item.isChecked());
+                editor.putBoolean("isautoweekend", item.isChecked());
                 editor.commit();
                 break;
             case R.id.show_recent_data_item:
@@ -257,7 +262,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     @Override
     public void onClick(View v) {
         String date = mETLastNetDate.getText().toString().trim();
-        String net = mETLastdayNet.getText().toString().trim();
+        String net = mETLastNet.getText().toString().trim();
         String target = mETLastTargetPrice.getText().toString().trim();
         String value = "";
         switch (v.getId()) {
@@ -281,7 +286,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Shanghai"));
                 String retStrFormatNowDate = sdFormatter.format(cal.getTime());
-                Double dnewnet = mPriceMonitorService.PredictNewNet(mETLastdayNet.getText().toString(), mETLastTargetPrice.getText().toString(),
+                Double dnewnet = mPriceMonitorService.PredictNewNet(mETLastNet.getText().toString(), mETLastTargetPrice.getText().toString(),
                         mETTargetCurrentPrice.getText().toString(), mETUSDCNYIncrease.getText().toString());
                 int len = dnewnet.toString().length();
                 if (len > 6) len = 6;
@@ -300,7 +305,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 // mETLastTargetPrice.setText(value);
                 break;
             case R.id.bt_calc_margin:
-                Double dmargin = mPriceMonitorService.CalcMarginPercent(mETLastdayNet.getText().toString(), mETLastTargetPrice.getText().toString(),
+                Double dmargin = mPriceMonitorService.CalcMarginPercent(mETLastNet.getText().toString(), mETLastTargetPrice.getText().toString(),
                         mETTargetCurrentPrice.getText().toString(), mETCurrentPrice.getText().toString());
                 mETMargin.setText(dmargin.toString().substring(0, 5) + "%");
                 break;
@@ -329,7 +334,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
     void ClearData() {
         mETCurrentPrice.setText("");
         mETCurrentTime.setText("");
-        mETLastdayNet.setText("");
+        mETLastNet.setText("");
         mETLastNetDate.setText("");
         mETLastTargetPrice.setText("");
         mETTargetCurrentTime.setText("");
@@ -345,7 +350,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             mTVCount.setText(d.msCount);
             mETCurrentPrice.setText(d.msCurrentPrice);
             mETCurrentTime.setText(d.msCurrentTime);
-            mETLastdayNet.setText(d.msLastdayNet);
+            mETLastNet.setText(d.msLastNet);
             mETLastNetDate.setText(d.msLastNetDate);
             mETLastTargetPrice.setText(d.msLastTargetPrice);
             mETTargetCurrentTime.setText(d.msTargetCurrentTime);
@@ -353,7 +358,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             mETMargin.setText(smargin);
             mETUSDCNYIncrease.setText(sfeincrease);
             mETLastTargetPrice.setTextColor(d.miLastTargetPriceTextColor);
-            mETLastdayNet.setTextColor(d.miLastdayNetTextColor);
+            mETLastNet.setTextColor(d.miLastdayNetTextColor);
             if (!ismute) {
                 OutputMessage(d.errmsg);
             }
