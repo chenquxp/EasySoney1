@@ -17,6 +17,7 @@ android {
         targetSdkVersion 24
         versionName '2.5.0'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        versionNameSuffix 'Hotfix'
     }
     buildTypes {
         release {

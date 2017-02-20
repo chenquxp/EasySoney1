@@ -265,6 +265,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
         String net = mETLastNet.getText().toString().trim();
         String target = mETLastTargetPrice.getText().toString().trim();
         String value = "";
+        int len;
         switch (v.getId()) {
             case R.id.bt_getcurrdata:
                 ClearData();
@@ -288,7 +289,7 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
                 String retStrFormatNowDate = sdFormatter.format(cal.getTime());
                 Double dnewnet = mPriceMonitorService.PredictNewNet(mETLastNet.getText().toString(), mETLastTargetPrice.getText().toString(),
                         mETTargetCurrentPrice.getText().toString(), mETUSDCNYIncrease.getText().toString());
-                int len = dnewnet.toString().length();
+                len = dnewnet.toString().length();
                 if (len > 6) len = 6;
                 editor.putString("predict" + date + "+1", dnewnet.toString().substring(0, len) + " (" + retStrFormatNowDate + ")");
                 editor.commit();
@@ -307,7 +308,9 @@ public class EasySoneyActivity extends AppCompatActivity implements View.OnClick
             case R.id.bt_calc_margin:
                 Double dmargin = mPriceMonitorService.CalcMarginPercent(mETLastNet.getText().toString(), mETLastTargetPrice.getText().toString(),
                         mETTargetCurrentPrice.getText().toString(), mETCurrentPrice.getText().toString());
-                mETMargin.setText(dmargin.toString().substring(0, 5) + "%");
+                len = dmargin.toString().length();
+                if (len > 5) len = 5;
+                mETMargin.setText(dmargin.toString().substring(0, len) + "%");
                 break;
             case R.id.tb_auto:
                 if (mTBAuto.isChecked()) {
